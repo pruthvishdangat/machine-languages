@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Best Hawaiian Restaurants in Chicago</title>
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto+Serif:wght@400;700&display=swap" rel="stylesheet">
+        <style>
+            body {
+                margin: 0;
+                font-family: 'Playfair Display', serif;
+                background: #f7f3ef;
+                color: #2d2a26;
+                overflow-x: hidden;
+            }
+            header {
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                background: linear-gradient(120deg, #f9d29d 0%, #ffd6e0 100%);
+                position: relative;
+                overflow: hidden;
+            }
+            .parallax-bg {
+                position: absolute;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1500&q=80') center/cover no-repeat;
+                z-index: 0;
+                transform: translateZ(0) scale(1.1);
+                will-change: transform;
+                opacity: 0.5;
+            }
+            header h1 {
+                font-size: 3.5rem;
+                z-index: 1;
+                color: #fff;
+                text-shadow: 0 4px 24px rgba(0,0,0,0.2);
+                margin: 0;
+                letter-spacing: 2px;
+            }
+            header p {
+                font-size: 1.5rem;
+                z-index: 1;
+                color: #fff;
+                margin-top: 1rem;
+                font-family: 'Roboto Serif', serif;
+                font-weight: 400;
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+                gap: 40px;
+                max-width: 1100px;
+                margin: 0 auto;
+                padding: 60px 20px 60px 20px;
+                position: relative;
+            }
+            .restaurant {
+                background: #fff;
+                border-radius: 18px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+                padding: 36px 32px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                transition: box-shadow 0.3s, transform 0.3s;
+                will-change: transform;
+            }
+            .restaurant:hover {
+                box-shadow: 0 16px 48px rgba(0,0,0,0.13);
+                transform: translateY(-10px) scale(1.04) rotateY(3deg);
+            }
+            .restaurant img {
+                width: 220px;
+                height: 150px;
+                object-fit: cover;
+                border-radius: 14px;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+                margin-bottom: 18px;
+            }
+            .restaurant-info h2 {
+                font-family: 'Playfair Display', serif;
+                font-size: 2rem;
+                margin: 0 0 10px 0;
+                color: #e07a5f;
+                text-align: center;
+            }
+            .restaurant-info p {
+                font-family: 'Roboto Serif', serif;
+                font-size: 1.1rem;
+                margin: 0 0 8px 0;
+                color: #444;
+                text-align: center;
+            }
+            .restaurant-info .address {
+                font-size: 1rem;
+                color: #888;
+                margin-top: 6px;
+                text-align: center;
+            }
+            .parallax-img {
+                width: 100%;
+                height: 220px;
+                background: url('https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=1500&q=80') center/cover no-repeat;
+                border-radius: 18px;
+                margin: 40px 0;
+                position: relative;
+                overflow: hidden;
+                will-change: transform;
+            }
+            @media (max-width: 700px) {
+                header h1 { font-size: 2.2rem; }
+                .grid { grid-template-columns: 1fr; }
+                .restaurant img { width: 100%; height: 180px; }
+            }
+        </style>
+</head>
+<body>
+    <header>
+        <div class="parallax-bg" id="parallax-bg"></div>
+        <h1>Best Hawaiian Restaurants in Chicago</h1>
+        <p>Experience the Aloha spirit with a luxury twist. Discover Chicago’s top Hawaiian dining spots!</p>
+    </header>
+    <div class="parallax-img" id="parallax-img1"></div>
+    <section class="grid">
+        <div class="restaurant" data-tilt>
+            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80" alt="Aloha Eats">
+            <div class="restaurant-info">
+                <h2>Aloha Eats</h2>
+                <p>Casual, authentic Hawaiian comfort food in a cozy, modern setting. Try the Loco Moco and Spam Musubi!</p>
+                <div class="address">2534 N Clark St, Chicago, IL 60614</div>
+            </div>
+        </div>
+        <div class="restaurant" data-tilt>
+            <img src="https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&w=600&q=80" alt="Pokelab">
+            <div class="restaurant-info">
+                <h2>Pokelab</h2>
+                <p>Chic, upscale poke bowls with fresh, sustainable ingredients. Vibrant atmosphere and creative cocktails.</p>
+                <div class="address">958 W Webster Ave, Chicago, IL 60614</div>
+            </div>
+        </div>
+        <div class="restaurant" data-tilt>
+            <img src="https://images.unsplash.com/photo-1506089676908-3592f7389d4d?auto=format&fit=crop&w=600&q=80" alt="Aloha Wagon">
+            <div class="restaurant-info">
+                <h2>Aloha Wagon</h2>
+                <p>Family-owned, vibrant spot for classic Hawaiian BBQ plates and tropical vibes. Don’t miss the Kalua Pork!</p>
+                <div class="address">3622 W Irving Park Rd, Chicago, IL 60618</div>
+            </div>
+        </div>
+    </section>
+    <div class="parallax-img" id="parallax-img2" style="background-image:url('https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=1500&q=80');"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.2/vanilla-tilt.min.js"></script>
+    <script>
+        // Parallax effect for header background
+        window.addEventListener('scroll', function() {
+            const scrolled = window.scrollY;
+            const parallaxBg = document.getElementById('parallax-bg');
+            if (parallaxBg) parallaxBg.style.transform = `translateY(${scrolled * 0.3}px) scale(1.1)`;
+            // Parallax for images
+            const img1 = document.getElementById('parallax-img1');
+            if (img1) img1.style.transform = `translateZ(0) scale(${1 + scrolled * 0.0005}) translateY(${scrolled * 0.12}px)`;
+            const img2 = document.getElementById('parallax-img2');
+            if (img2) img2.style.transform = `translateZ(0) scale(${1 + scrolled * 0.0007}) translateY(${scrolled * 0.18}px)`;
+        });
+        // 3D tilt effect for cards
+        VanillaTilt.init(document.querySelectorAll("[data-tilt]"), {
+            max: 18,
+            speed: 400,
+            glare: true,
+            "max-glare": 0.18
+        });
+    </script>
+</body>
+</html>
