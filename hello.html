@@ -1,21 +1,213 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+        <!-- Three.js CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/examples/js/controls/OrbitControls.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Snowfall on the Beach</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #87ceeb;
+        }
+        .beach-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(to top, #ffe082 0%, #87ceeb 60%);
+        }
+        #snow-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .beach-scene {
+            position: relative;
+            z-index: 3;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .beach-scene h1 {
+            color: #fff;
+            text-shadow: 2px 2px 8px #0008;
+            margin-bottom: 40px;
+        }
+        .people-group, .drinks-group {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        .person, .person-drink {
+            width: 60px;
+            height: 120px;
+            background: #ffe0b2;
+            border-radius: 30px 30px 30px 30px / 60px 60px 60px 60px;
+            position: relative;
+            box-shadow: 0 4px 16px #0002;
+        }
+        .person::before, .person-drink::before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 10px;
+            width: 40px;
+            height: 40px;
+            background: #ffe0b2;
+            border-radius: 50%;
+            border: 2px solid #e0b080;
+        }
+        .person-drink::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 40px;
+            width: 16px;
+            height: 32px;
+            background: #b3e5fc;
+            border-radius: 6px 6px 10px 10px;
+            border: 2px solid #0288d1;
+            transform: rotate(-20deg);
+        }
+        /* Sand effect */
+        .beach-container::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            height: 180px;
+            background: linear-gradient(to top, #ffe082 80%, transparent 100%);
+            z-index: 1;
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello!</h1>
-
-    <p>this is a test going on in a class</p>
-
-    <p>i am trying something out here</p>
-
-    <i>hello everyone, how are you doing? </i>
-
-    <h1>THIS IS A WEBSITE</h1>
-    
-
+        <div id="threejs-container" style="width:100vw; height:100vh; position:fixed; top:0; left:0;"></div>
 </body>
+</body>
+<script>
+// Basic Three.js 3D beach scene setup
+let scene, camera, renderer, controls;
+let snowParticles = [];
+
+function init() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87ceeb);
+
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 10, 30);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('threejs-container').appendChild(renderer.domElement);
+
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 5, 0);
+    controls.update();
+
+    // Beach (sand) ground
+    const sandGeometry = new THREE.PlaneGeometry(60, 30);
+    const sandMaterial = new THREE.MeshPhongMaterial({ color: 0xffe082 });
+    const sand = new THREE.Mesh(sandGeometry, sandMaterial);
+    sand.rotation.x = -Math.PI / 2;
+    sand.position.y = 0;
+    scene.add(sand);
+
+    // Ocean
+    const oceanGeometry = new THREE.PlaneGeometry(60, 20);
+    const oceanMaterial = new THREE.MeshPhongMaterial({ color: 0x4fc3f7, transparent: true, opacity: 0.7 });
+    const ocean = new THREE.Mesh(oceanGeometry, oceanMaterial);
+    ocean.rotation.x = -Math.PI / 2;
+    ocean.position.y = 0.01;
+    ocean.position.z = -15;
+    scene.add(ocean);
+
+    // Lighting
+    const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+    sun.position.set(20, 40, 20);
+    scene.add(sun);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+    // Placeholder for humans (to be replaced with realistic models)
+    const humanMaterial = new THREE.MeshPhongMaterial({ color: 0xfbc490 });
+    for (let i = 0; i < 3; i++) {
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 3, 16), humanMaterial);
+        body.position.set(-5 + i * 5, 1.5, 0);
+        scene.add(body);
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.9, 16, 16), humanMaterial);
+        head.position.set(-5 + i * 5, 3.5, 0);
+        scene.add(head);
+    }
+    // Placeholder for people with drinks
+    for (let i = 0; i < 2; i++) {
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 3, 16), humanMaterial);
+        body.position.set(-2 + i * 4, 1.5, 4);
+        scene.add(body);
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.9, 16, 16), humanMaterial);
+        head.position.set(-2 + i * 4, 3.5, 4);
+        scene.add(head);
+        // Drink (glass)
+        const glass = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.7, 12), new THREE.MeshPhongMaterial({ color: 0x4fc3f7 }));
+        glass.position.set(-2 + i * 4, 2.2, 4.7);
+        scene.add(glass);
+    }
+
+    // Snowfall particles
+    const snowGeo = new THREE.BufferGeometry();
+    const snowCount = 200;
+    const snowPositions = [];
+    for (let i = 0; i < snowCount; i++) {
+        snowPositions.push(
+            Math.random() * 60 - 30, // x
+            Math.random() * 20 + 5,  // y
+            Math.random() * 30 - 15  // z
+        );
+    }
+    snowGeo.setAttribute('position', new THREE.Float32BufferAttribute(snowPositions, 3));
+    const snowMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.4 });
+    const snow = new THREE.Points(snowGeo, snowMat);
+    scene.add(snow);
+    snowParticles = { geo: snowGeo, count: snowCount };
+
+    window.addEventListener('resize', onWindowResize);
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    // Animate snow
+    if (snowParticles.geo) {
+        const pos = snowParticles.geo.attributes.position;
+        for (let i = 0; i < snowParticles.count; i++) {
+            let y = pos.getY(i) - 0.08 - Math.random() * 0.05;
+            if (y < 0) y = Math.random() * 10 + 15;
+            pos.setY(i, y);
+        }
+        pos.needsUpdate = true;
+    }
+    renderer.render(scene, camera);
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+init();
+animate();
+</script>
 </html>
