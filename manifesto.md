@@ -1,4 +1,4 @@
-# manifesto
+# Manifesto
 
 You are not tied to a language.
 
