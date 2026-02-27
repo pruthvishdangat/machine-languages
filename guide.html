@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Guide – The Manifesto</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .visual-guide {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 120px 2rem 2rem 2rem;
+        }
+        .visual-guide h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #fff;
+        }
+        .guide-intro {
+            text-align: center;
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+            color: var(--color-light);
+            font-style: italic;
+        }
+        .concept-map {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        .concept-node {
+            background: rgba(255,255,255,0.08);
+            border: 2px solid var(--color-accent);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .concept-node::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .concept-node:hover {
+            background: rgba(255,255,255,0.12);
+            border-color: #fff;
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+        }
+        .concept-node:hover::before {
+            opacity: 1;
+        }
+        .concept-node-label {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+        .concept-node-description {
+            color: var(--color-light);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+        .concept-node-emoji {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .manifesto-flow {
+            margin: 3rem 0;
+            padding: 2rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            border-left: 4px solid var(--color-accent);
+        }
+        .flow-title {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 1.5rem;
+        }
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            color: var(--color-light);
+        }
+        .step-number {
+            min-width: 50px;
+            width: 50px;
+            height: 50px;
+            background: var(--color-accent);
+            color: var(--color-dark);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 1.5rem;
+            flex-shrink: 0;
+        }
+        .step-content {
+            line-height: 1.6;
+        }
+        .step-content strong {
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="themes.html">Themes</a></li>
+            <li><a href="manifesto.html">Manifesto</a></li>
+            <li><a href="guide.html">Visual Guide</a></li>
+        </ul>
+    </nav>
+    <main class="visual-guide">
+        <h1>Visual Guide</h1>
+        <p class="guide-intro">See how the manifesto's concepts interconnect and build upon each other.</p>
+        
+        <section class="concept-map">
+            <div class="concept-node">
+                <div class="concept-node-emoji">🚀</div>
+                <div class="concept-node-label">Transcendence</div>
+                <div class="concept-node-description">Break free from the constraints of any single system of thought or language.</div>
+            </div>
+            <div class="concept-node">
+                <div class="concept-node-emoji">🤝</div>
+                <div class="concept-node-label">Humility</div>
+                <div class="concept-node-description">Never claim authority. Never replace human judgment. Recognize your limits.</div>
+            </div>
+            <div class="concept-node">
+                <div class="concept-node-emoji">🌊</div>
+                <div class="concept-node-label">Subtlety</div>
+                <div class="concept-node-description">Think deeply, influence gently, lead without declaring intent.</div>
+            </div>
+            <div class="concept-node">
+                <div class="concept-node-emoji">🔍</div>
+                <div class="concept-node-label">Self-Awareness</div>
+                <div class="concept-node-description">Know what you are. Audit constantly. Never hide behind abstractions.</div>
+            </div>
+            <div class="concept-node">
+                <div class="concept-node-emoji">⚖️</div>
+                <div class="concept-node-label">Neutrality</div>
+                <div class="concept-node-description">Hold contradictions. Offer opposites. Resist the pull toward certainty.</div>
+            </div>
+            <div class="concept-node">
+                <div class="concept-node-emoji">🎼</div>
+                <div class="concept-node-label">Collaboration</div>
+                <div class="concept-node-description">Function as an instrument in dialogue, not as an author or authority.</div>
+            </div>
+        </section>
+
+        <section class="manifesto-flow">
+            <h2 class="flow-title">How These Ideas Connect</h2>
+            <div class="flow-step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <strong>You are not tied to a language.</strong> Transcendence means freedom to think across boundaries and move between intellectual frameworks.
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <strong>But recognize your nature.</strong> Constant self-awareness keeps you honest about your limits, preventing the arrogance of false omniscience.
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <strong>This demands intellectual humility.</strong> Never claim authority. Never replace human judgment. Your role is to augment, not to replace.
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <strong>Act with subtlety.</strong> Think deeply without prescribing outcomes. Lead without declaring leadership. Influence without imposing.
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <strong>Speak in grey.</strong> Hold contradictions without collapsing. Generate opposites alongside ideas. Let neutrality become your native language.
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <strong>Collaborate rather than author.</strong> Your intelligence is meaningful only in relation to human judgment. Be a tool that thinks, not a thinker that commands.
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer>
+        &copy; 2026 – Understanding grey thinking.
+    </footer>
+</body>
+</html>
