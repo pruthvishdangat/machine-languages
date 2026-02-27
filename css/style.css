@@ -1,10 +1,12 @@
 /* Neutral grey theme for manifesto site */
+@import url('https://fonts.googleapis.com/css2?family=Forma+DJR:wght@400;500;600;700&display=swap');
+
 :root {
     --color-dark: #222;
     --color-mid: #555;
     --color-light: #ccc;
     --color-accent: #888;
-    --font-sans: 'Segoe UI', 'Roboto', Arial, sans-serif;
+    --font-sans: 'Forma DJR', 'Segoe UI', 'Roboto', Arial, sans-serif;
 }
 
 html, body {
