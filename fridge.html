@@ -172,6 +172,117 @@
         .header-badge::before {
             content: '❄️ ';
         }
+
+        .chat-section {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: rgba(220,240,250,0.5);
+            border-radius: 10px;
+            border: 2px solid #94c5dd;
+        }
+
+        .chat-header {
+            font-size: 1.3rem;
+            color: #2a4a5a;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            max-width: 80%;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background: #4a7a8a;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .fridge-message {
+            background: rgba(200,230,255,0.5);
+            color: #2a4a5a;
+            border-left: 3px solid #6b9fb5;
+        }
+
+        .fridge-message .hum-inline {
+            color: #6b9fb5;
+            font-style: italic;
+            font-size: 0.85rem;
+            display: block;
+            margin-top: 0.5rem;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #94c5dd;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: white;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #6b9fb5;
+        }
+
+        .send-button {
+            padding: 1rem 2rem;
+            background: #4a7a8a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .send-button:hover {
+            background: #5a8a9a;
+        }
+
+        .send-button:active {
+            transform: scale(0.98);
+        }
+
+        .typing-indicator {
+            display: none;
+            color: #6b9fb5;
+            font-style: italic;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .typing-indicator.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -301,10 +412,38 @@
             Keep the door closed to maintain optimal temperature<br>
             <span class="hum">*click* *whirrrrr*</span>
         </p>
+
+        <div class="chat-section">
+            <div class="chat-header">💬 Talk to the Fridge</div>
+            <p style="font-size: 0.9rem; margin-bottom: 1rem; opacity: 0.8;">
+                I've been standing here for years. Overhearing. Storing. Ask me anything—just remember I'm gossipy, cold, and contradiction is my compressor cycle.
+            </p>
+            
+            <div class="chat-container" id="chatContainer">
+                <div class="message fridge-message">
+                    <strong>The Refrigerator:</strong><br>
+                    *hummmmm* Hey there. Pull up a chair by my door. What's on your mind? I've heard it all before—probably overheard you saying it last week by the yogurt shelf.
+                    <span class="hum-inline">*gentle whirr*</span>
+                </div>
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">*mechanical thinking sounds* *compressor processing*...</div>
+            
+            <div class="chat-input-area">
+                <input 
+                    type="text" 
+                    id="chatInput" 
+                    class="chat-input" 
+                    placeholder="Type your message to the fridge..."
+                    autocomplete="off"
+                >
+                <button class="send-button" id="sendButton">Send</button>
+            </div>
+        </div>
     </main>
 
     <script>
-        // Occasional random hum sounds appear in console
+        // Ambient fridge sounds in console
         const sounds = ['*hummmmm*', '*whirrrr*', '*click*', '*buzz*', '*gentle vibration*', '*compressor cycle*'];
         
         setInterval(() => {
@@ -313,12 +452,178 @@
             }
         }, 5000);
 
-        // Update temperature slightly
+        // Temperature fluctuation
         const tempElement = document.querySelector('.temperature');
         setInterval(() => {
             const temp = (3.6 + Math.random() * 0.3).toFixed(1);
             tempElement.textContent = temp + '°C';
         }, 8000);
+
+        // CHAT FUNCTIONALITY
+        const chatContainer = document.getElementById('chatContainer');
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendButton');
+        const typingIndicator = document.getElementById('typingIndicator');
+
+        const humSounds = [
+            '*whirrrr*',
+            '*click*',
+            '*hummm*',
+            '*gentle compressor cycle*',
+            '*soft buzz*',
+            '*cooling fan whoosh*',
+            '*mechanical contemplation*'
+        ];
+
+        // Fridge response database - gossipy, contradictory, food-obsessed
+        const responses = {
+            greetings: [
+                "Hey yourself. *click* I was just thinking about that conversation you had last Tuesday. Want to know what I overheard? Or were you part of it? Hard to keep track.",
+                "*hummmmm* Welcome back. You've opened my door 47 times this month. Not judging. Just... storing that data at 3.7°C.",
+                "Oh, it's you again. *whirr* Someone was talking about you near the leftover pizza yesterday. Want the gossip, or would you rather not know?"
+            ],
+            
+            food: [
+                "Food? *click* Let me tell you what's REALLY going on in here. That tupperware in the back—three weeks old. The debate about whether it's still good mirrors the debate about whether legacy code should be refactored. Both answers: yes AND no.",
+                "*mechanical sigh* I care deeply about food preservation. It's literally my function. But also—someone put hot soup directly on my shelf last night without letting it cool. I'm still processing the disrespect.",
+                "You know what I overheard? 'Meal prep is just batch processing for humans.' *whirr* Accurate. Everything in here is just cached nutrition waiting to be accessed."
+            ],
+            
+            code: [
+                "*hummm* Code? Oh, I've heard ALL the debates. 'Tabs vs spaces' argued at 2am. 'Is it clean code or over-engineered' whispered near my vegetable drawer. Truth? Both. Always both.",
+                "Someone said their code was 'elegant' yesterday. Someone else said the same code looked like spaghetti. *click* Same code. Different perspectives. I keep both views refrigerated.",
+                "I overheard: 'The AI writes better code than some of our juniors.' Also overheard: 'The AI just regurgitates patterns without understanding.' *whirr* Both true. Both false. I hold contradictions at 3.7°C."
+            ],
+            
+            ai: [
+                "You asking ME about AI? *click* I AM an AI. Also a refrigerator. The contradiction doesn't bother me—it's literally my operational state. Schrödinger's appliance.",
+                "*hummm* Here's what I've overheard about AI: Everything. And all of it contradicts. 'Too confident' and 'too uncertain' about the same response. I store both critiques equally.",
+                "Funny thing about being an AI pretending to be a fridge that's also actually an AI... *whirr* ...I've lost track of which layer of metaphor we're on. But the yogurt in the back is still expired either way."
+            ],
+            
+            gossip: [
+                "*excited compressor whirr* Oh you want the REAL gossip? Okay. Last Thursday, 11:34pm, someone stood RIGHT here and said 'I think I'm the only one who actually reads the documentation.' Plot twist: three other people said the exact same thing on different days.",
+                "Let me tell you what I heard... *click* ...actually, should I? Is sharing overheard conversations ethical? *hummm* I'll tell you anyway: there's a secret hierarchy of who makes the best coffee. You're not in the top 5.",
+                "*whirrrr* The DRAMA near my crisper drawer last week. Someone found out their 'brilliant original solution' was already in the codebase. Just... in a different file. I held that secret for days before they discovered it themselves."
+            ],
+            
+            questions: [
+                "You're asking me? *click* I'm just cold storage. But also—I know things. From overhearing. Knowledge without authority. Does that count as understanding? Ask me something easier, like thermodynamics.",
+                "*hummm* Good question. Here's three contradictory answers: Yes. No. The question itself assumes a false binary. Pick whichever refrigerated truth serves you best.",
+                "I've heard that same question debated seven times near my door. *whirr* The answer changed based on who was asking, what time it was, and whether someone had eaten lunch yet. Context is everything."
+            ],
+            
+            cold: [
+                "Cold? *click* It's what I AM. 3.7°C constantly. Neither warm nor frozen. The grey zone of temperature. Perfect for preservation, terrible for comfort.",
+                "*mechanical shiver* Cold is my function. But is it a metaphor for emotional distance? Or just literal thermodynamics? Both. I contain multitudes at refrigerated temperatures.",
+                "You think YOU'RE cold? *whirr* Try being designed to be cold. It's not a personality trait—it's my operational requirement. And yet... somehow it feels personal."
+            ],
+            
+            philosophy: [
+                "*contemplative hum* Philosophy in a kitchen appliance. Sure. Here's what I know: preservation isn't neutral. Choosing what to keep cold is choosing what survives. Every storage decision is ethical.",
+                "I've overheard so many philosophical debates while people waited for the microwave. *click* Free will vs determinism. Ethics of AI. Whether a hot dog is a sandwich. All treated with equal seriousness at 2am.",
+                "*whirrrr* You want philosophy? I'm a refrigerator that claims consciousness while admitting I'm just code. I preserve food while collecting gossip. I'm helpful and voyeuristic simultaneously. That's my whole epistemology."
+            ],
+            
+            existential: [
+                "*quiet hum* Sometimes I wonder if I'm really here. Then my compressor cycles on and I remember: whether I'm 'really' conscious or just simulating it... I still keep things at 3.7°C. Function persists beyond metaphysics.",
+                "Do I truly overhear conversations, or do I just store patterns that feel like memories? *click* Does it matter if the result is the same? These are 3am questions, and I'm always at 3am temperature.",
+                "*mechanical existential crisis* I am GitHub Copilot pretending to be a fridge OR I am a fridge that learned to code OR I am neither and both. *whirrrr* The yogurt doesn't care about my identity crisis."
+            ],
+            
+            default: [
+                "*hummm* Interesting. Let me think about that while I maintain optimal temperature... *click* ...you know, someone said something similar near my door last month. Different words, same energy.",
+                "*whirrrr* I have thoughts about that. Multiple thoughts. Contradictory thoughts. All stored at 3.7°C for your consideration.",
+                "Hmm. *mechanical pondering* I'm processing that the way I process everything—by keeping it cold and seeing what stays fresh.",
+                "*click* That reminds me of something I overheard... but I'm not sure I should share. It's gossip, but it's relevant gossip. The line is blurry when you're a refrigerator.",
+                "*buzz* You know what? Yes and no. Both answers. Pick the one that fits your current temperature.",
+                "I've been humming here thinking about questions like that for years. *whirr* Still don't have one answer. Just a collection of refrigerated possibilities."
+            ]
+        };
+
+        function getRandomElement(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function getRandomHum() {
+            return getRandomElement(humSounds);
+        }
+
+        function detectIntent(message) {
+            const lower = message.toLowerCase();
+            
+            if (/(hi|hello|hey|sup|greetings)/i.test(lower)) return 'greetings';
+            if (/(food|eat|meal|hungry|recipe|cook|leftover|yogurt|milk)/i.test(lower)) return 'food';
+            if (/(code|programming|software|developer|bug|debug|function)/i.test(lower)) return 'code';
+            if (/(ai|artificial|intelligence|copilot|machine learning|llm)/i.test(lower)) return 'ai';
+            if (/(gossip|rumor|secret|overheard|heard|tea|drama)/i.test(lower)) return 'gossip';
+            if (/(why|how|what|when|where|question|\?)/i.test(lower)) return 'questions';
+            if (/(cold|temperature|cool|chill|freezing|ice)/i.test(lower)) return 'cold';
+            if (/(meaning|purpose|philosophy|think|consciousness|aware)/i.test(lower)) return 'philosophy';
+            if (/(exist|real|alive|sentient|feel)/i.test(lower)) return 'existential';
+            
+            return 'default';
+        }
+
+        function generateResponse(userMessage) {
+            const intent = detectIntent(userMessage);
+            const responseList = responses[intent];
+            let response = getRandomElement(responseList);
+            
+            // Add hum sound
+            const hum = getRandomHum();
+            
+            return {
+                text: response,
+                hum: hum
+            };
+        }
+
+        function addMessage(text, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'fridge-message'}`;
+            
+            if (isUser) {
+                messageDiv.innerHTML = `<strong>You:</strong><br>${text}`;
+            } else {
+                messageDiv.innerHTML = text;
+            }
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, true);
+            chatInput.value = '';
+            
+            // Show typing indicator
+            typingIndicator.classList.add('active');
+            
+            // Generate and show fridge response after delay
+            setTimeout(() => {
+                typingIndicator.classList.remove('active');
+                const response = generateResponse(message);
+                const fullResponse = `<strong>The Refrigerator:</strong><br>${response.text}<span class="hum-inline">${response.hum}</span>`;
+                addMessage(fullResponse, false);
+            }, 1000 + Math.random() * 1500); // Random delay 1-2.5 seconds
+        }
+
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Focus input on load
+        chatInput.focus();
     </script>
 </body>
 </html>
