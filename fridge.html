@@ -21,6 +21,8 @@
             --cam-off-y: 0px;
             --aberration: 0px;
             --depth-scale: 1;
+            --depth-fog: 0.18;
+            --near-shadow: 0.55;
         }
 
         * {
@@ -41,7 +43,8 @@
         .screen {
             position: fixed;
             inset: 0;
-            perspective: 600px;
+            perspective: 440px;
+            perspective-origin: 50% 49%;
             overflow: hidden;
             background:
                 radial-gradient(circle at 50% 0%, rgba(185, 223, 245, 0.18), transparent 30%),
@@ -67,6 +70,40 @@
             transform-style: preserve-3d;
             transform: translate3d(-50%, -50%, -310px) scale(var(--depth-scale));
             filter: saturate(0.86) contrast(1.14);
+        }
+
+        .cavity::before,
+        .cavity::after {
+            content: '';
+            position: absolute;
+            left: 9.5%;
+            width: 81%;
+            border-radius: 28px;
+            pointer-events: none;
+            transform-style: preserve-3d;
+        }
+
+        /* Foreground aperture lip to create true near-field depth */
+        .cavity::before {
+            top: 7%;
+            height: 86%;
+            transform: translateZ(296px);
+            border: 24px solid rgba(191, 201, 210, 0.42);
+            box-shadow:
+                inset 0 0 26px rgba(255, 255, 255, 0.18),
+                inset 0 0 80px rgba(0, 0, 0, calc(var(--near-shadow) * 0.7)),
+                0 8px 25px rgba(0, 0, 0, 0.48);
+            backdrop-filter: blur(0.3px);
+        }
+
+        /* Deep tunnel vignette inside the cavity */
+        .cavity::after {
+            top: 7%;
+            height: 86%;
+            transform: translateZ(110px);
+            background: radial-gradient(circle at 50% 45%, transparent 28%, rgba(7, 13, 18, 0.5) 100%);
+            mix-blend-mode: multiply;
+            opacity: 0.85;
         }
 
         .wall {
@@ -127,14 +164,14 @@
         .left {
             left: 9.5%;
             transform-origin: left center;
-            transform: rotateY(82deg) translateZ(6px);
+            transform: rotateY(79deg) translateZ(10px);
             box-shadow: inset 18px 0 45px rgba(0, 0, 0, 0.35), inset -2px 0 20px rgba(255, 255, 255, 0.1);
         }
 
         .right {
             right: 9.5%;
             transform-origin: right center;
-            transform: rotateY(-82deg) translateZ(6px);
+            transform: rotateY(-79deg) translateZ(10px);
             box-shadow: inset -18px 0 45px rgba(0, 0, 0, 0.35), inset 2px 0 20px rgba(255, 255, 255, 0.08);
         }
 
@@ -149,14 +186,14 @@
         .ceiling {
             top: 7%;
             transform-origin: center top;
-            transform: rotateX(-78deg) translateZ(8px);
+            transform: rotateX(-74deg) translateZ(12px);
             box-shadow: inset 0 -28px 50px rgba(0, 0, 0, 0.3), inset 0 2px 15px rgba(255, 255, 255, 0.08);
         }
 
         .floor {
             bottom: 7%;
             transform-origin: center bottom;
-            transform: rotateX(78deg) translateZ(8px);
+            transform: rotateX(74deg) translateZ(12px);
             box-shadow: inset 0 28px 50px rgba(0, 0, 0, 0.4), inset 0 -2px 15px rgba(255, 255, 255, 0.05);
         }
 
@@ -556,7 +593,7 @@
             position: absolute;
             inset: 0;
             pointer-events: none;
-            background: linear-gradient(0deg, rgba(2, 7, 13, 0.08) 0%, transparent 24%, transparent 76%, rgba(2, 7, 13, 0.04) 100%);
+            background: linear-gradient(0deg, rgba(2, 7, 13, calc(var(--depth-fog) * 0.8)) 0%, transparent 24%, transparent 76%, rgba(2, 7, 13, calc(var(--depth-fog) * 0.45)) 100%);
             mix-blend-mode: multiply;
             opacity: 0.6;
         }
@@ -565,7 +602,7 @@
             position: absolute;
             inset: 0;
             pointer-events: none;
-            background: radial-gradient(ellipse at center 30%, transparent 0%, rgba(10, 20, 28, 0.18) 100%);
+            background: radial-gradient(ellipse at center 30%, transparent 0%, rgba(10, 20, 28, calc(var(--depth-fog) + 0.08)) 100%);
             mix-blend-mode: overlay;
             opacity: 0.5;
         }
@@ -1327,6 +1364,8 @@
 
             // Parallax depth scaling for motion effect
             const depthScale = 1.0 + (walkZ / 1800) * 0.14;
+            const depthFog = clamp(0.15 + (walkZ + 45) / 1600 + Math.abs(camPitch) / 180, 0.12, 0.46);
+            const nearShadow = clamp(0.52 + (walkZ + 45) / 820, 0.36, 0.92);
 
             root.style.setProperty('--cam-y', `${camYaw.toFixed(3)}deg`);
             root.style.setProperty('--cam-x', `${camPitch.toFixed(3)}deg`);
@@ -1334,6 +1373,8 @@
             root.style.setProperty('--cam-off-x', `${offX.toFixed(2)}px`);
             root.style.setProperty('--cam-off-y', `${offY.toFixed(2)}px`);
             root.style.setProperty('--depth-scale', depthScale.toFixed(4));
+            root.style.setProperty('--depth-fog', depthFog.toFixed(3));
+            root.style.setProperty('--near-shadow', nearShadow.toFixed(3));
 
             root.style.setProperty('--light-opacity', mood.light.toFixed(3));
             root.style.setProperty('--light-hue', `${mood.hue}deg`);
