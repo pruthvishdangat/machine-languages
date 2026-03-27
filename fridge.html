@@ -167,6 +167,118 @@
             box-shadow: inset 0 -18px 24px rgba(107, 153, 187, 0.28);
         }
 
+        .gasket {
+            position: absolute;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #d5dde5, #a7b5c2);
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.52), inset 0 -3px 7px rgba(48, 64, 78, 0.28);
+            transform-style: preserve-3d;
+        }
+
+        .gasket.top,
+        .gasket.bottom {
+            width: 80%;
+            height: 2.5%;
+            left: 10%;
+            transform: translateZ(201px);
+        }
+
+        .gasket.top { top: 9.5%; }
+        .gasket.bottom { bottom: 9.5%; }
+
+        .gasket.left,
+        .gasket.right {
+            width: 2.4%;
+            height: 83%;
+            top: 8.5%;
+            transform: translateZ(201px);
+        }
+
+        .gasket.left { left: 10%; }
+        .gasket.right { right: 10%; }
+
+        .door {
+            position: absolute;
+            width: 33%;
+            height: 85%;
+            right: 8.6%;
+            top: 7.8%;
+            transform-origin: right center;
+            transform-style: preserve-3d;
+            transform: translateZ(214px) rotateY(-58deg);
+            animation: doorBreath 8.5s ease-in-out infinite;
+        }
+
+        @keyframes doorBreath {
+            0%, 100% { transform: translateZ(214px) rotateY(-58deg); }
+            50% { transform: translateZ(214px) rotateY(-55.5deg); }
+        }
+
+        .door-panel {
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            background: linear-gradient(160deg, #e8f4fc 0%, #bfd7e7 100%);
+            border: 1px solid rgba(255, 255, 255, 0.65);
+            box-shadow: inset 0 0 30px rgba(111, 156, 186, 0.35), 0 14px 26px rgba(9, 30, 44, 0.3);
+            transform: translateZ(2px);
+        }
+
+        .door-bin {
+            position: absolute;
+            left: 10%;
+            width: 80%;
+            height: 17%;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            background: linear-gradient(180deg, rgba(235, 247, 255, 0.62), rgba(178, 215, 238, 0.36));
+            box-shadow: inset 0 -10px 15px rgba(84, 127, 156, 0.24);
+            transform-style: preserve-3d;
+        }
+
+        .door-bin::before {
+            content: '';
+            position: absolute;
+            left: 6%;
+            width: 88%;
+            height: 24%;
+            top: -12%;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.42);
+            box-shadow: 0 3px 8px rgba(58, 88, 112, 0.2);
+        }
+
+        .door-bin.top { top: 16%; }
+        .door-bin.middle { top: 41%; }
+        .door-bin.bottom { top: 66%; }
+
+        .bin-item {
+            position: absolute;
+            bottom: 13%;
+            width: 24%;
+            border-radius: 8px;
+            box-shadow: 0 9px 12px rgba(36, 62, 82, 0.23);
+            border: 1px solid rgba(255, 255, 255, 0.36);
+        }
+
+        .bin-item.a {
+            left: 10%;
+            height: 58%;
+            background: linear-gradient(180deg, #fff1de, #e5b873);
+        }
+
+        .bin-item.b {
+            left: 39%;
+            height: 68%;
+            background: linear-gradient(180deg, #ebf7ff, #9bc3dd);
+        }
+
+        .bin-item.c {
+            left: 67%;
+            height: 50%;
+            background: linear-gradient(180deg, #f0ffef, #8dc88e);
+        }
+
         .item {
             position: absolute;
             border-radius: 10px;
@@ -368,6 +480,11 @@
                 transform: translate3d(-50%, -48%, -420px);
             }
 
+            .door {
+                right: 8%;
+                width: 36%;
+            }
+
             .hud {
                 width: calc(100vw - 24px);
                 left: 12px;
@@ -392,11 +509,35 @@
                 <div class="wall ceiling"></div>
                 <div class="wall floor"></div>
 
+                <div class="gasket top"></div>
+                <div class="gasket bottom"></div>
+                <div class="gasket left"></div>
+                <div class="gasket right"></div>
+
                 <div class="light-bar"></div>
                 <div class="shelf top"></div>
                 <div class="shelf middle"></div>
                 <div class="shelf bottom"></div>
                 <div class="tray"></div>
+
+                <div class="door">
+                    <div class="door-panel"></div>
+                    <div class="door-bin top">
+                        <div class="bin-item a"></div>
+                        <div class="bin-item b"></div>
+                        <div class="bin-item c"></div>
+                    </div>
+                    <div class="door-bin middle">
+                        <div class="bin-item a"></div>
+                        <div class="bin-item b"></div>
+                        <div class="bin-item c"></div>
+                    </div>
+                    <div class="door-bin bottom">
+                        <div class="bin-item a"></div>
+                        <div class="bin-item b"></div>
+                        <div class="bin-item c"></div>
+                    </div>
+                </div>
 
                 <div class="item milk" data-label="MILK"></div>
                 <div class="item jar" data-label="PICKLES"></div>
@@ -439,6 +580,21 @@
 
         let pointerX = 0;
         let pointerY = 0;
+        let targetZ = -720;
+        let targetRotateY = 0;
+        let targetRotateX = 0;
+        let targetLean = 0;
+        let cameraZ = -720;
+        let cameraRotateY = 0;
+        let cameraRotateX = 0;
+        let fridgeLean = 0;
+        let shakeKick = 0;
+        let lastScrollY = window.scrollY;
+        let scrollVelocity = 0;
+
+        function lerp(start, end, amount) {
+            return start + (end - start) * amount;
+        }
 
         function clamp(value, min, max) {
             return Math.min(max, Math.max(min, value));
@@ -447,16 +603,36 @@
         function updateScene() {
             const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
             const progress = maxScroll > 0 ? clamp(window.scrollY / maxScroll, 0, 1) : 0;
+            const delta = window.scrollY - lastScrollY;
+            lastScrollY = window.scrollY;
+            scrollVelocity = lerp(scrollVelocity, delta, 0.25);
+            shakeKick = clamp(shakeKick + Math.abs(delta) * 0.028, 0, 5.2);
 
-            const zDepth = -720 + progress * 740;
-            const rotateY = -11 + progress * 22 + pointerX * 6;
-            const rotateX = 9 - progress * 14 + pointerY * 4;
-            const sway = Math.sin(progress * Math.PI * 3) * 2;
+            targetZ = -740 + progress * 765;
+            targetRotateY = -12 + progress * 25 + pointerX * 7;
+            targetRotateX = 11 - progress * 15 + pointerY * 4.5;
+            targetLean = Math.sin(progress * Math.PI * 2.2) * 2.1 + pointerX * 2.6;
+        }
 
-            camera.style.transform = `translate3d(0, 0, ${zDepth}px) rotateX(${rotateX}deg) rotateY(${rotateY + sway}deg)`;
+        function animateCamera(time) {
+            const speed = clamp(Math.abs(scrollVelocity) * 0.2, 0, 4.5);
+            const bobX = Math.sin(time * 0.01 + window.scrollY * 0.025) * (0.45 + speed * 0.12);
+            const bobY = Math.cos(time * 0.013 + window.scrollY * 0.018) * (0.55 + speed * 0.16);
+            const jitterX = Math.sin(time * 0.11) * 0.18 + Math.cos(time * 0.067) * 0.22;
+            const jitterY = Math.cos(time * 0.095) * 0.16 + Math.sin(time * 0.07) * 0.18;
+            const shake = shakeKick * 0.15;
 
-            const fridgeLean = Math.sin(progress * Math.PI * 2) * 1.8 + pointerX * 2;
+            const smooth = 0.09;
+            cameraZ = lerp(cameraZ, targetZ + bobY * 3.4, smooth);
+            cameraRotateY = lerp(cameraRotateY, targetRotateY + bobX + jitterX * speed + shake, smooth);
+            cameraRotateX = lerp(cameraRotateX, targetRotateX + bobY + jitterY * speed - shake * 0.4, smooth);
+            fridgeLean = lerp(fridgeLean, targetLean + jitterX * 0.35, 0.1);
+
+            camera.style.transform = `translate3d(0, 0, ${cameraZ}px) rotateX(${cameraRotateX}deg) rotateY(${cameraRotateY}deg)`;
             fridge.style.transform = `translate3d(-50%, -50%, -420px) rotateY(${fridgeLean}deg)`;
+
+            shakeKick = Math.max(0, shakeKick * 0.9 - 0.01);
+            requestAnimationFrame(animateCamera);
         }
 
         window.addEventListener('scroll', updateScene, { passive: true });
@@ -537,6 +713,7 @@
         });
 
         updateScene();
+        requestAnimationFrame(animateCamera);
     </script>
 </body>
 </html>
