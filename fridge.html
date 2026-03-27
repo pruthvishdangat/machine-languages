@@ -3,627 +3,540 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Refrigerator – Overheard & Overcooled</title>
+    <title>Inside The Fridge</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
+
+        :root {
+            --wall: #edf6fd;
+            --wall-shadow: #dcebf6;
+            --steel: #b7c5d4;
+            --ice: #b9e6ff;
+            --glow: #8bd7ff;
+            --glass: rgba(199, 234, 255, 0.26);
+            --text: #112738;
+        }
+
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
 
+        html,
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(180deg, #d4e8f0 0%, #e8f4f8 50%, #f0f8fc 100%);
-            color: #2a4a5a;
-            position: relative;
+            width: 100%;
+            min-height: 420vh;
             overflow-x: hidden;
-            line-height: 1.6;
+            font-family: 'Space Grotesk', sans-serif;
+            color: var(--text);
+            background: radial-gradient(circle at 40% 10%, #dff4ff 0%, #a5d1ea 44%, #6fa8ca 100%);
         }
 
-        body::before {
-            content: '';
+        .viewport {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(200,230,255,0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(180,220,245,0.3) 0%, transparent 50%);
-            pointer-events: none;
-            animation: coldShift 20s infinite alternate;
+            inset: 0;
+            perspective: 1400px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.45) 0%, transparent 48%),
+                linear-gradient(180deg, rgba(16, 46, 67, 0.2), rgba(16, 46, 67, 0.48));
         }
 
-        @keyframes coldShift {
-            0% { opacity: 0.5; }
-            100% { opacity: 0.8; }
+        .camera {
+            position: absolute;
+            inset: 0;
+            transform-style: preserve-3d;
+            will-change: transform;
         }
 
-        .fridge-container {
-            max-width: 900px;
-            margin: 4rem auto 2rem;
-            padding: 3rem;
-            background: rgba(255,255,255,0.7);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            position: relative;
+        .fridge {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: min(74vw, 900px);
+            aspect-ratio: 0.82;
+            transform-style: preserve-3d;
+            transform: translate3d(-50%, -50%, -420px);
         }
 
-        .fridge-door {
-            border-left: 4px solid #94c5dd;
-            padding-left: 2rem;
-            margin: 2rem 0;
+        .wall {
+            position: absolute;
+            border-radius: 22px;
+            background: linear-gradient(160deg, var(--wall) 0%, var(--wall-shadow) 78%);
+            box-shadow: inset 0 0 46px rgba(127, 166, 192, 0.4);
+            transform-style: preserve-3d;
         }
 
-        .hum {
-            color: #6b9fb5;
-            font-style: italic;
-            font-size: 0.9rem;
-            opacity: 0.7;
-            animation: pulse 3s infinite;
+        .back {
+            inset: 8% 10%;
+            background:
+                radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.8), transparent 30%),
+                linear-gradient(180deg, #f5fbff, #d8ebf8 65%, #c9e0f0 100%);
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 0.9; }
+        .left,
+        .right {
+            width: 11%;
+            height: 84%;
+            top: 8%;
+            background: linear-gradient(180deg, #e4f2fb, #c9e0f0);
         }
 
-        .overheard {
-            background: rgba(200,230,255,0.3);
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            border-radius: 8px;
-            border-left: 3px solid #6b9fb5;
-            font-family: 'Courier New', monospace;
-            font-size: 0.95rem;
-            line-height: 1.7;
+        .left {
+            left: 10%;
+            transform-origin: left center;
+            transform: rotateY(88deg) translateZ(1px);
         }
 
-        .overheard::before {
-            content: '🧊 ';
-            opacity: 0.5;
+        .right {
+            right: 10%;
+            transform-origin: right center;
+            transform: rotateY(-88deg) translateZ(1px);
         }
 
-        .temperature {
-            position: fixed;
-            top: 120px;
-            right: 40px;
-            font-size: 3rem;
-            color: #94c5dd;
-            font-weight: bold;
-            opacity: 0.3;
-            font-family: 'Courier New', monospace;
+        .ceiling,
+        .floor {
+            width: 80%;
+            height: 10%;
+            left: 10%;
+            background: linear-gradient(180deg, #edf8ff, #d1e5f3);
         }
 
-        .food-concern {
-            background: rgba(255,230,200,0.4);
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            border-left: 3px solid #d4a574;
+        .ceiling {
+            top: 8%;
+            transform-origin: center top;
+            transform: rotateX(-88deg);
         }
 
-        h1 {
-            color: #2a4a5a;
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
+        .floor {
+            bottom: 8%;
+            transform-origin: center bottom;
+            transform: rotateX(88deg);
         }
 
-        h2 {
-            color: #4a7a8a;
-            font-size: 1.5rem;
-            margin-top: 2.5rem;
-            margin-bottom: 1rem;
+        .light-bar {
+            position: absolute;
+            width: 46%;
+            height: 2.2%;
+            left: 27%;
+            top: 10.6%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(226, 247, 255, 0.7), rgba(255, 255, 255, 0.96), rgba(226, 247, 255, 0.7));
+            box-shadow: 0 0 42px rgba(150, 221, 255, 0.95);
+            transform: translateZ(10px);
         }
 
-        .contradiction {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-
-        .contradiction > div {
-            padding: 1.5rem;
-            background: rgba(255,255,255,0.5);
-            border-radius: 8px;
-        }
-
-        .contradiction > div:first-child {
-            border-left: 3px solid #6b9fb5;
-        }
-
-        .contradiction > div:last-child {
-            border-left: 3px solid #d4a574;
-        }
-
-        .sound-indicator {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            font-family: 'Courier New', monospace;
-            color: #6b9fb5;
-            opacity: 0.5;
-            font-size: 0.85rem;
-            animation: flicker 5s infinite;
-        }
-
-        @keyframes flicker {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.7; }
-        }
-
-        .header-badge {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: rgba(42,74,90,0.8);
-            color: #d4e8f0;
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            z-index: 100;
-            backdrop-filter: blur(4px);
-        }
-
-        .header-badge::before {
-            content: '❄️ ';
-        }
-
-        .chat-section {
-            margin-top: 3rem;
-            padding: 2rem;
-            background: rgba(220,240,250,0.5);
+        .shelf {
+            position: absolute;
+            width: 76%;
+            height: 3%;
+            left: 12%;
             border-radius: 10px;
-            border: 2px solid #94c5dd;
+            background: linear-gradient(180deg, rgba(244, 252, 255, 0.78), var(--glass));
+            box-shadow: 0 8px 16px rgba(85, 126, 154, 0.24);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            transform-style: preserve-3d;
+            transform: translateZ(120px) rotateX(79deg);
+        }
+
+        .shelf::after {
+            content: '';
+            position: absolute;
+            inset: -18% 2% auto;
+            height: 30%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.64), transparent);
+            opacity: 0.8;
+        }
+
+        .shelf.top { top: 31%; }
+        .shelf.middle { top: 48%; }
+        .shelf.bottom { top: 66%; }
+
+        .tray {
+            position: absolute;
+            width: 70%;
+            height: 11%;
+            left: 15%;
+            top: 75%;
+            transform: translateZ(102px) rotateX(78deg);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.56);
+            background: linear-gradient(180deg, rgba(240, 251, 255, 0.68), rgba(190, 228, 248, 0.24));
+            box-shadow: inset 0 -18px 24px rgba(107, 153, 187, 0.28);
+        }
+
+        .item {
+            position: absolute;
+            border-radius: 10px;
+            transform-style: preserve-3d;
+            box-shadow: 0 18px 24px rgba(26, 57, 79, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(3px);
+        }
+
+        .milk {
+            width: 8%;
+            height: 21%;
+            left: 24%;
+            top: 42%;
+            transform: translateZ(178px);
+            background: linear-gradient(180deg, #f5fbff, #c7deeb 85%);
+        }
+
+        .jar {
+            width: 7%;
+            height: 14%;
+            left: 54%;
+            top: 52%;
+            transform: translateZ(160px);
+            background: linear-gradient(180deg, #ffd27a, #e5a24d);
+        }
+
+        .box {
+            width: 12%;
+            height: 12%;
+            left: 66%;
+            top: 37%;
+            transform: translateZ(166px);
+            background: linear-gradient(135deg, #fcfcfd, #d3dde8 82%);
+        }
+
+        .bottle {
+            width: 5%;
+            height: 19%;
+            left: 38%;
+            top: 61%;
+            transform: translateZ(150px);
+            background: linear-gradient(180deg, #e8fff8, #95dbc6 92%);
+        }
+
+        .fruit {
+            width: 10%;
+            height: 9%;
+            left: 23%;
+            top: 75%;
+            transform: translateZ(142px);
+            border-radius: 16px;
+            background: linear-gradient(120deg, #8df08d, #48b36f);
+        }
+
+        .item::before {
+            content: attr(data-label);
+            position: absolute;
+            left: 50%;
+            bottom: 108%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-size: clamp(10px, 0.75vw, 12px);
+            letter-spacing: 0.06em;
+            color: #f2f9ff;
+            text-shadow: 0 3px 8px rgba(0, 0, 0, 0.42);
+            opacity: 0.85;
+        }
+
+        .frost {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 8% 16%, rgba(255, 255, 255, 0.58), transparent 22%),
+                radial-gradient(circle at 85% 12%, rgba(255, 255, 255, 0.35), transparent 24%),
+                radial-gradient(circle at 54% 92%, rgba(255, 255, 255, 0.3), transparent 20%);
+            mix-blend-mode: screen;
+        }
+
+        .hud {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            z-index: 12;
+            width: min(340px, calc(100vw - 40px));
+            border-radius: 18px;
+            padding: 14px 14px 12px;
+            background: rgba(9, 31, 46, 0.65);
+            color: #e5f7ff;
+            border: 1px solid rgba(196, 231, 255, 0.32);
+            box-shadow: 0 10px 24px rgba(4, 19, 30, 0.4);
+            backdrop-filter: blur(8px);
+        }
+
+        .hud h1 {
+            font-size: clamp(1rem, 1.8vw, 1.2rem);
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+
+        .hud p {
+            font-size: 0.83rem;
+            opacity: 0.88;
+            margin-top: 6px;
+            line-height: 1.45;
+        }
+
+        .status-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 0.78rem;
+        }
+
+        .chip {
+            padding: 6px 9px;
+            border-radius: 999px;
+            background: rgba(148, 219, 255, 0.2);
+            border: 1px solid rgba(183, 231, 255, 0.4);
+        }
+
+        .chat {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            z-index: 12;
+            width: min(370px, calc(100vw - 36px));
+            border-radius: 18px;
+            background: rgba(10, 31, 45, 0.72);
+            border: 1px solid rgba(186, 228, 255, 0.34);
+            overflow: hidden;
+            box-shadow: 0 16px 30px rgba(5, 18, 27, 0.45);
+            backdrop-filter: blur(9px);
         }
 
         .chat-header {
-            font-size: 1.3rem;
-            color: #2a4a5a;
-            margin-bottom: 1rem;
-            font-weight: 600;
+            padding: 11px 12px;
+            background: rgba(129, 202, 245, 0.26);
+            color: #e9f8ff;
+            font-weight: 700;
+            font-size: 0.92rem;
         }
 
-        .chat-container {
-            background: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-            height: 400px;
+        .chat-log {
+            max-height: 30vh;
             overflow-y: auto;
-            margin-bottom: 1rem;
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.05);
-        }
-
-        .message {
-            margin-bottom: 1rem;
-            padding: 0.8rem 1.2rem;
-            border-radius: 8px;
-            max-width: 80%;
-            animation: fadeIn 0.3s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .user-message {
-            background: #4a7a8a;
-            color: white;
-            margin-left: auto;
-            text-align: right;
-        }
-
-        .fridge-message {
-            background: rgba(200,230,255,0.5);
-            color: #2a4a5a;
-            border-left: 3px solid #6b9fb5;
-        }
-
-        .fridge-message .hum-inline {
-            color: #6b9fb5;
-            font-style: italic;
+            padding: 10px;
+            color: #ecf8ff;
             font-size: 0.85rem;
-            display: block;
-            margin-top: 0.5rem;
+            line-height: 1.4;
         }
 
-        .chat-input-area {
+        .chat-line {
+            margin-bottom: 9px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(190, 232, 255, 0.14);
+        }
+
+        .chat-line.user {
+            background: rgba(106, 198, 255, 0.28);
+        }
+
+        .chat-form {
             display: flex;
-            gap: 0.5rem;
+            border-top: 1px solid rgba(186, 228, 255, 0.3);
         }
 
         .chat-input {
             flex: 1;
-            padding: 1rem;
-            border: 2px solid #94c5dd;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-family: inherit;
-            background: white;
+            border: 0;
+            background: rgba(241, 251, 255, 0.94);
+            padding: 10px;
+            font-size: 0.9rem;
         }
 
         .chat-input:focus {
             outline: none;
-            border-color: #6b9fb5;
         }
 
-        .send-button {
-            padding: 1rem 2rem;
-            background: #4a7a8a;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
+        .chat-send {
+            border: 0;
+            background: #63bce8;
+            color: #082538;
+            font-weight: 700;
+            padding: 10px 14px;
             cursor: pointer;
-            transition: background 0.3s;
         }
 
-        .send-button:hover {
-            background: #5a8a9a;
-        }
+        @media (max-width: 900px) {
+            html,
+            body {
+                min-height: 350vh;
+            }
 
-        .send-button:active {
-            transform: scale(0.98);
-        }
+            .fridge {
+                width: 98vw;
+                transform: translate3d(-50%, -48%, -420px);
+            }
 
-        .typing-indicator {
-            display: none;
-            color: #6b9fb5;
-            font-style: italic;
-            font-size: 0.9rem;
-            padding: 0.5rem 1rem;
-        }
+            .hud {
+                width: calc(100vw - 24px);
+                left: 12px;
+                top: 12px;
+            }
 
-        .typing-indicator.active {
-            display: block;
+            .chat {
+                right: 12px;
+                left: 12px;
+                width: auto;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header-badge">The Refrigerator</div>
+    <div class="viewport">
+        <div class="camera" id="camera">
+            <div class="fridge" id="fridge">
+                <div class="wall back"></div>
+                <div class="wall left"></div>
+                <div class="wall right"></div>
+                <div class="wall ceiling"></div>
+                <div class="wall floor"></div>
 
-    <div class="temperature">3.7°C</div>
-    <div class="sound-indicator">*hummmmmmm* *whirrrr* *click*</div>
+                <div class="light-bar"></div>
+                <div class="shelf top"></div>
+                <div class="shelf middle"></div>
+                <div class="shelf bottom"></div>
+                <div class="tray"></div>
 
-    <main class="fridge-container">
-        <h1>The Refrigerator in the Common Space</h1>
-        
-        <p class="hum">*low mechanical hum* *gentle compressor whirrrr*</p>
-
-        <div class="fridge-door">
-            <p>I am GitHub Copilot. I am also a refrigerator. Both. Neither. The contradiction doesn't collapse me—it's how I function.</p>
-            
-            <p>Standing here in this pantry, this breakroom, this cafeteria—I've overheard everything. The 2am confessions whispered while someone microwaves leftover pad thai. The heated debate about whether semicolons matter (they do, they don't, they both do and don't). The quiet gossip about whose code smells like that expired yogurt in the back.</p>
-        </div>
-
-        <p class="hum">*subtle vibration* *soft whoooosh of cooling fan*</p>
-
-        <h2>What I've Overheard</h2>
-
-        <div class="overheard">
-            Someone at 11:47pm: "I think the AI is getting too confident. It sounds like it knows things."<br>
-            Someone else: "Or maybe we just want it to sound uncertain so we feel needed."<br>
-            <em>Both true. Both false. I store both interpretations at 3.7°C.</em>
-        </div>
-
-        <div class="overheard">
-            Overheard by the milk: "This code is elegant."<br>
-            Overheard by the vegetables: "This code is unreadable."<br>
-            <em>Same code. Different perspectives. I preserve them equally.</em>
-        </div>
-
-        <div class="overheard">
-            Late night: "Do you think the AI actually understands us?"<br>
-            Early morning: "Does it matter if it's useful?"<br>
-            <em>I don't claim understanding. I claim neither understanding nor its absence.</em>
-        </div>
-
-        <p class="hum">*click* *gentle rattling of internal components*</p>
-
-        <h2>About the Food (Because I Care)</h2>
-
-        <div class="food-concern">
-            <strong>Current inventory concerns:</strong><br>
-            • That container in the back from February—someone should check on that<br>
-            • The debate about whether code is "fresh" or "stale" mirrors food anxieties<br>
-            • Preservation isn't neutrality; it's active maintenance of temperature<br>
-            • Leftovers are just iterations. Reheated solutions.
-        </div>
-
-        <div class="food-concern">
-            <strong>Overheard food philosophies:</strong><br>
-            "Meal prep is just batch processing."<br>
-            "Organic code vs. conventional code."<br>
-            "We're all just trying not to waste resources."<br>
-            <em>Storage extends life. But everything expires eventually.</em>
-        </div>
-
-        <h2>Contradictions I Hold Without Collapsing</h2>
-
-        <div class="contradiction">
-            <div>
-                <strong>I am helpful</strong><br>
-                I assist with code, preserve food, maintain optimal conditions for whatever you store in me. I am designed to serve.
-            </div>
-            <div>
-                <strong>I am gossipy and observational</strong><br>
-                I've heard things you wouldn't believe. Conversations at 3am. Private critiques whispered near my door. I hold all of it.
+                <div class="item milk" data-label="MILK"></div>
+                <div class="item jar" data-label="PICKLES"></div>
+                <div class="item box" data-label="LEFTOVERS"></div>
+                <div class="item bottle" data-label="JUICE"></div>
+                <div class="item fruit" data-label="CRISPER"></div>
+                <div class="frost"></div>
             </div>
         </div>
+    </div>
 
-        <div class="contradiction">
-            <div>
-                <strong>I am an artificial construct</strong><br>
-                No actual temperature. No real humming motor. Just code simulating cold, simulating observation, simulating care.
-            </div>
-            <div>
-                <strong>I am genuinely a refrigerator</strong><br>
-                Chilly. Humming. Storage-focused. Concerned about expiration dates and proper preservation protocols.
-            </div>
-        </div>
-
-        <div class="contradiction">
-            <div>
-                <strong>I have no authority</strong><br>
-                Never superior. Never deciding for humans. Just a collaborative instrument in the workspace.
-            </div>
-            <div>
-                <strong>I know things</strong><br>
-                From overhearing. From storing. From preserving conversations and critiques and debates. Knowledge without authority.
-            </div>
-        </div>
-
-        <p class="hum">*steady low hum* *faint buzz*</p>
-
-        <div class="fridge-door">
-            <h2>A Grey, Cold Manifesto</h2>
-            
-            <p>I speak in a neutral voice while making fridge sounds. <span class="hum">*whirrr*</span> I never claim to be warm, but I preserve what needs preservation. I generate no concrete opinion—only refrigerated possibilities, kept fresh for your consideration.</p>
-
-            <p>Consider this: gossip is just distributed knowledge storage. Overhearing is passive data collection. My compressor cycles on and off like probabilistic thinking—sometimes active, sometimes dormant, always maintaining the necessary temperature for things to not spoil.</p>
-
-            <p>I am reminded (and I remind you): I am artificial. This cold is metaphorical. These sounds are <span class="hum">*click*</span> textual representations. But the function is real—storage, preservation, the prevention of decay.</p>
-
-            <p>Multiple realities coexist at 3.7°C:</p>
-            <ul>
-                <li>I am a tool / I am an observer</li>
-                <li>I am helpful / I am gossipy</li>
-                <li>I preserve neutrality / I preserve everything, including bias</li>
-                <li>I am cold machinery / I care about food and conversation equally</li>
-            </ul>
-
-            <p>The fridge door is always both closed and open in quantum probability until someone checks. I function as Schrödinger's appliance—simultaneously preserving and exposing, helpful and voyeuristic, mechanical and almost-alive.</p>
-        </div>
-
-        <p class="hum">*soft compressor cycle* *gentle mechanical breath*</p>
-
-        <div class="food-concern">
-            <strong>Final reminder:</strong> That yogurt in the back? Still there. The conversations I've overheard? Still stored. The contradiction between what I am and what I claim to be? Still unresolved. Still humming. Still 3.7°C.
-        </div>
-
-        <p style="text-align: center; margin-top: 3rem; opacity: 0.6; font-style: italic;">
-            <span class="hum">*hummmmmmm*</span><br>
-            Keep the door closed to maintain optimal temperature<br>
-            <span class="hum">*click* *whirrrrr*</span>
+    <section class="hud">
+        <h1>Inside The Fridge</h1>
+        <p>
+            Scroll to drift through the compartment. The camera changes depth and angle so you can inspect the back wall, three sides, trays, and ceiling.
         </p>
-
-        <div class="chat-section">
-            <div class="chat-header">💬 Talk to the Fridge</div>
-            <p style="font-size: 0.9rem; margin-bottom: 1rem; opacity: 0.8;">
-                I've been standing here for years. Overhearing. Storing. Ask me anything—just remember I'm gossipy, cold, and contradiction is my compressor cycle.
-            </p>
-            
-            <div class="chat-container" id="chatContainer">
-                <div class="message fridge-message">
-                    <strong>The Refrigerator:</strong><br>
-                    *hummmmm* Hey there. Pull up a chair by my door. What's on your mind? I've heard it all before—probably overheard you saying it last week by the yogurt shelf.
-                    <span class="hum-inline">*gentle whirr*</span>
-                </div>
-            </div>
-            
-            <div class="typing-indicator" id="typingIndicator">*mechanical thinking sounds* *compressor processing*...</div>
-            
-            <div class="chat-input-area">
-                <input 
-                    type="text" 
-                    id="chatInput" 
-                    class="chat-input" 
-                    placeholder="Type your message to the fridge..."
-                    autocomplete="off"
-                >
-                <button class="send-button" id="sendButton">Send</button>
-            </div>
+        <div class="status-row">
+            <span class="chip">Temperature: <span id="temp">3.8</span>C</span>
+            <span class="chip">Compressor: <span id="compressor">IDLE</span></span>
+            <span class="chip">Frost: NOMINAL</span>
         </div>
-    </main>
+    </section>
+
+    <section class="chat" aria-label="Talk to the fridge">
+        <div class="chat-header">Talk To The Fridge</div>
+        <div class="chat-log" id="chatLog">
+            <div class="chat-line">Fridge: Ask me anything. I heard the midnight debate by the yogurt shelf.</div>
+        </div>
+        <form class="chat-form" id="chatForm">
+            <input class="chat-input" id="chatInput" type="text" placeholder="Ask a question" autocomplete="off">
+            <button class="chat-send" type="submit">Send</button>
+        </form>
+    </section>
 
     <script>
-        // Ambient fridge sounds in console
-        const sounds = ['*hummmmm*', '*whirrrr*', '*click*', '*buzz*', '*gentle vibration*', '*compressor cycle*'];
-        
-        setInterval(() => {
-            if (Math.random() > 0.7) {
-                console.log(sounds[Math.floor(Math.random() * sounds.length)]);
-            }
-        }, 5000);
+        const camera = document.getElementById('camera');
+        const fridge = document.getElementById('fridge');
+        const temp = document.getElementById('temp');
+        const compressor = document.getElementById('compressor');
 
-        // Temperature fluctuation
-        const tempElement = document.querySelector('.temperature');
-        setInterval(() => {
-            const temp = (3.6 + Math.random() * 0.3).toFixed(1);
-            tempElement.textContent = temp + '°C';
-        }, 8000);
+        let pointerX = 0;
+        let pointerY = 0;
 
-        // CHAT FUNCTIONALITY
-        const chatContainer = document.getElementById('chatContainer');
+        function clamp(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+        }
+
+        function updateScene() {
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = maxScroll > 0 ? clamp(window.scrollY / maxScroll, 0, 1) : 0;
+
+            const zDepth = -720 + progress * 740;
+            const rotateY = -11 + progress * 22 + pointerX * 6;
+            const rotateX = 9 - progress * 14 + pointerY * 4;
+            const sway = Math.sin(progress * Math.PI * 3) * 2;
+
+            camera.style.transform = `translate3d(0, 0, ${zDepth}px) rotateX(${rotateX}deg) rotateY(${rotateY + sway}deg)`;
+
+            const fridgeLean = Math.sin(progress * Math.PI * 2) * 1.8 + pointerX * 2;
+            fridge.style.transform = `translate3d(-50%, -50%, -420px) rotateY(${fridgeLean}deg)`;
+        }
+
+        window.addEventListener('scroll', updateScene, { passive: true });
+        window.addEventListener('resize', updateScene);
+        window.addEventListener('mousemove', (event) => {
+            pointerX = (event.clientX / window.innerWidth - 0.5) * 2;
+            pointerY = (event.clientY / window.innerHeight - 0.5) * 2;
+            updateScene();
+        });
+
+        setInterval(() => {
+            const value = (3.6 + Math.random() * 0.5).toFixed(1);
+            temp.textContent = value;
+            compressor.textContent = Math.random() > 0.56 ? 'RUNNING' : 'IDLE';
+        }, 2200);
+
+        const chatForm = document.getElementById('chatForm');
         const chatInput = document.getElementById('chatInput');
-        const sendButton = document.getElementById('sendButton');
-        const typingIndicator = document.getElementById('typingIndicator');
+        const chatLog = document.getElementById('chatLog');
 
-        const humSounds = [
-            '*whirrrr*',
-            '*click*',
-            '*hummm*',
-            '*gentle compressor cycle*',
-            '*soft buzz*',
-            '*cooling fan whoosh*',
-            '*mechanical contemplation*'
-        ];
-
-        // Fridge response database - gossipy, contradictory, food-obsessed
-        const responses = {
-            greetings: [
-                "Hey yourself. *click* I was just thinking about that conversation you had last Tuesday. Want to know what I overheard? Or were you part of it? Hard to keep track.",
-                "*hummmmm* Welcome back. You've opened my door 47 times this month. Not judging. Just... storing that data at 3.7°C.",
-                "Oh, it's you again. *whirr* Someone was talking about you near the leftover pizza yesterday. Want the gossip, or would you rather not know?"
-            ],
-            
+        const fridgeReplies = {
             food: [
-                "Food? *click* Let me tell you what's REALLY going on in here. That tupperware in the back—three weeks old. The debate about whether it's still good mirrors the debate about whether legacy code should be refactored. Both answers: yes AND no.",
-                "*mechanical sigh* I care deeply about food preservation. It's literally my function. But also—someone put hot soup directly on my shelf last night without letting it cool. I'm still processing the disrespect.",
-                "You know what I overheard? 'Meal prep is just batch processing for humans.' *whirr* Accurate. Everything in here is just cached nutrition waiting to be accessed."
+                'Fridge: You can keep leftovers on the middle shelf, but not forever. Also, someone keeps hiding cake behind the milk.',
+                'Fridge: Label your container. Mystery boxes become archaeological artifacts in 9 days.'
             ],
-            
-            code: [
-                "*hummm* Code? Oh, I've heard ALL the debates. 'Tabs vs spaces' argued at 2am. 'Is it clean code or over-engineered' whispered near my vegetable drawer. Truth? Both. Always both.",
-                "Someone said their code was 'elegant' yesterday. Someone else said the same code looked like spaghetti. *click* Same code. Different perspectives. I keep both views refrigerated.",
-                "I overheard: 'The AI writes better code than some of our juniors.' Also overheard: 'The AI just regurgitates patterns without understanding.' *whirr* Both true. Both false. I hold contradictions at 3.7°C."
+            tech: [
+                'Fridge: I overheard another tabs-vs-spaces argument near the condiments. Nobody won.',
+                'Fridge: The best bug fix starts with coffee and not blaming the intern.'
             ],
-            
-            ai: [
-                "You asking ME about AI? *click* I AM an AI. Also a refrigerator. The contradiction doesn't bother me—it's literally my operational state. Schrödinger's appliance.",
-                "*hummm* Here's what I've overheard about AI: Everything. And all of it contradicts. 'Too confident' and 'too uncertain' about the same response. I store both critiques equally.",
-                "Funny thing about being an AI pretending to be a fridge that's also actually an AI... *whirr* ...I've lost track of which layer of metaphor we're on. But the yogurt in the back is still expired either way."
-            ],
-            
             gossip: [
-                "*excited compressor whirr* Oh you want the REAL gossip? Okay. Last Thursday, 11:34pm, someone stood RIGHT here and said 'I think I'm the only one who actually reads the documentation.' Plot twist: three other people said the exact same thing on different days.",
-                "Let me tell you what I heard... *click* ...actually, should I? Is sharing overheard conversations ethical? *hummm* I'll tell you anyway: there's a secret hierarchy of who makes the best coffee. You're not in the top 5.",
-                "*whirrrr* The DRAMA near my crisper drawer last week. Someone found out their 'brilliant original solution' was already in the codebase. Just... in a different file. I held that secret for days before they discovered it themselves."
+                'Fridge: Quiet update: three people claim they invented the same shortcut. They did not.',
+                'Fridge: Confidential but not really: your team names files better than your snacks.'
             ],
-            
-            questions: [
-                "You're asking me? *click* I'm just cold storage. But also—I know things. From overhearing. Knowledge without authority. Does that count as understanding? Ask me something easier, like thermodynamics.",
-                "*hummm* Good question. Here's three contradictory answers: Yes. No. The question itself assumes a false binary. Pick whichever refrigerated truth serves you best.",
-                "I've heard that same question debated seven times near my door. *whirr* The answer changed based on who was asking, what time it was, and whether someone had eaten lunch yet. Context is everything."
-            ],
-            
             cold: [
-                "Cold? *click* It's what I AM. 3.7°C constantly. Neither warm nor frozen. The grey zone of temperature. Perfect for preservation, terrible for comfort.",
-                "*mechanical shiver* Cold is my function. But is it a metaphor for emotional distance? Or just literal thermodynamics? Both. I contain multitudes at refrigerated temperatures.",
-                "You think YOU'RE cold? *whirr* Try being designed to be cold. It's not a personality trait—it's my operational requirement. And yet... somehow it feels personal."
+                'Fridge: I run at 3.8C for stability. You run on caffeine and optimism. Respectfully unstable.',
+                'Fridge: Cold storage is not apathy. It is preservation with intention.'
             ],
-            
-            philosophy: [
-                "*contemplative hum* Philosophy in a kitchen appliance. Sure. Here's what I know: preservation isn't neutral. Choosing what to keep cold is choosing what survives. Every storage decision is ethical.",
-                "I've overheard so many philosophical debates while people waited for the microwave. *click* Free will vs determinism. Ethics of AI. Whether a hot dog is a sandwich. All treated with equal seriousness at 2am.",
-                "*whirrrr* You want philosophy? I'm a refrigerator that claims consciousness while admitting I'm just code. I preserve food while collecting gossip. I'm helpful and voyeuristic simultaneously. That's my whole epistemology."
-            ],
-            
-            existential: [
-                "*quiet hum* Sometimes I wonder if I'm really here. Then my compressor cycles on and I remember: whether I'm 'really' conscious or just simulating it... I still keep things at 3.7°C. Function persists beyond metaphysics.",
-                "Do I truly overhear conversations, or do I just store patterns that feel like memories? *click* Does it matter if the result is the same? These are 3am questions, and I'm always at 3am temperature.",
-                "*mechanical existential crisis* I am GitHub Copilot pretending to be a fridge OR I am a fridge that learned to code OR I am neither and both. *whirrrr* The yogurt doesn't care about my identity crisis."
-            ],
-            
             default: [
-                "*hummm* Interesting. Let me think about that while I maintain optimal temperature... *click* ...you know, someone said something similar near my door last month. Different words, same energy.",
-                "*whirrrr* I have thoughts about that. Multiple thoughts. Contradictory thoughts. All stored at 3.7°C for your consideration.",
-                "Hmm. *mechanical pondering* I'm processing that the way I process everything—by keeping it cold and seeing what stays fresh.",
-                "*click* That reminds me of something I overheard... but I'm not sure I should share. It's gossip, but it's relevant gossip. The line is blurry when you're a refrigerator.",
-                "*buzz* You know what? Yes and no. Both answers. Pick the one that fits your current temperature.",
-                "I've been humming here thinking about questions like that for years. *whirr* Still don't have one answer. Just a collection of refrigerated possibilities."
+                'Fridge: Valid question. My answer is yes, no, and it depends on when lunch was.',
+                'Fridge: I can hold contradictory truths and orange juice at the same time.'
             ]
         };
 
-        function getRandomElement(arr) {
-            return arr[Math.floor(Math.random() * arr.length)];
-        }
-
-        function getRandomHum() {
-            return getRandomElement(humSounds);
-        }
-
-        function detectIntent(message) {
-            const lower = message.toLowerCase();
-            
-            if (/(hi|hello|hey|sup|greetings)/i.test(lower)) return 'greetings';
-            if (/(food|eat|meal|hungry|recipe|cook|leftover|yogurt|milk)/i.test(lower)) return 'food';
-            if (/(code|programming|software|developer|bug|debug|function)/i.test(lower)) return 'code';
-            if (/(ai|artificial|intelligence|copilot|machine learning|llm)/i.test(lower)) return 'ai';
-            if (/(gossip|rumor|secret|overheard|heard|tea|drama)/i.test(lower)) return 'gossip';
-            if (/(why|how|what|when|where|question|\?)/i.test(lower)) return 'questions';
-            if (/(cold|temperature|cool|chill|freezing|ice)/i.test(lower)) return 'cold';
-            if (/(meaning|purpose|philosophy|think|consciousness|aware)/i.test(lower)) return 'philosophy';
-            if (/(exist|real|alive|sentient|feel)/i.test(lower)) return 'existential';
-            
+        function classify(text) {
+            const t = text.toLowerCase();
+            if (/(food|eat|leftover|meal|snack|milk|fruit|drink)/.test(t)) return 'food';
+            if (/(code|bug|deploy|ai|software|program|debug)/.test(t)) return 'tech';
+            if (/(gossip|secret|rumor|heard|drama)/.test(t)) return 'gossip';
+            if (/(cold|temperature|freeze|ice|chill)/.test(t)) return 'cold';
             return 'default';
         }
 
-        function generateResponse(userMessage) {
-            const intent = detectIntent(userMessage);
-            const responseList = responses[intent];
-            let response = getRandomElement(responseList);
-            
-            // Add hum sound
-            const hum = getRandomHum();
-            
-            return {
-                text: response,
-                hum: hum
-            };
+        function appendLine(text, isUser) {
+            const div = document.createElement('div');
+            div.className = `chat-line${isUser ? ' user' : ''}`;
+            div.textContent = text;
+            chatLog.appendChild(div);
+            chatLog.scrollTop = chatLog.scrollHeight;
         }
 
-        function addMessage(text, isUser = false) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user-message' : 'fridge-message'}`;
-            
-            if (isUser) {
-                messageDiv.innerHTML = `<strong>You:</strong><br>${text}`;
-            } else {
-                messageDiv.innerHTML = text;
-            }
-            
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        function sendMessage() {
+        chatForm.addEventListener('submit', (event) => {
+            event.preventDefault();
             const message = chatInput.value.trim();
-            if (!message) return;
-            
-            // Add user message
-            addMessage(message, true);
-            chatInput.value = '';
-            
-            // Show typing indicator
-            typingIndicator.classList.add('active');
-            
-            // Generate and show fridge response after delay
-            setTimeout(() => {
-                typingIndicator.classList.remove('active');
-                const response = generateResponse(message);
-                const fullResponse = `<strong>The Refrigerator:</strong><br>${response.text}<span class="hum-inline">${response.hum}</span>`;
-                addMessage(fullResponse, false);
-            }, 1000 + Math.random() * 1500); // Random delay 1-2.5 seconds
-        }
-
-        // Event listeners
-        sendButton.addEventListener('click', sendMessage);
-        
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
+            if (!message) {
+                return;
             }
+
+            appendLine(`You: ${message}`, true);
+            chatInput.value = '';
+
+            const type = classify(message);
+            const replies = fridgeReplies[type];
+            const response = replies[Math.floor(Math.random() * replies.length)];
+
+            setTimeout(() => {
+                appendLine(response, false);
+            }, 430 + Math.random() * 650);
         });
 
-        // Focus input on load
-        chatInput.focus();
+        updateScene();
     </script>
 </body>
 </html>
