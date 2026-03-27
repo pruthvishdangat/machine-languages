@@ -549,12 +549,44 @@
             transition: transform 0.28s cubic-bezier(0.18, 0.73, 0.23, 1.05);
         }
 
-        .flicker .lamp {
-            animation: flicker 0.12s steps(2, end) infinite;
+        .pulse-smooth .lamp {
+            animation: pulse-smooth 1.2s ease-in-out infinite;
+        }
+
+        .flicker-gentle .lamp {
+            animation: flicker-gentle 0.35s steps(5, end) infinite;
+        }
+
+        .flicker-stutter .lamp {
+            animation: flicker-stutter 0.28s steps(7, end) infinite;
+        }
+
+        .flicker-irregular .lamp {
+            animation: flicker-irregular 0.42s steps(9, end) infinite;
+        }
+
+        .pulse-melancholic .lamp {
+            animation: pulse-melancholic 2.1s ease-in-out infinite;
+        }
+
+        .flicker-sharp .lamp {
+            animation: flicker-sharp 0.18s steps(8, end) infinite;
+        }
+
+        .flicker-aggressive .lamp {
+            animation: flicker-aggressive 0.11s steps(11, end) infinite;
         }
 
         .strobe .lamp {
             animation: strobe 0.06s steps(2, end) infinite;
+        }
+
+        .flicker-flutter .lamp {
+            animation: flicker-flutter 0.38s steps(8, end) infinite;
+        }
+
+        .pulse-reflect .lamp {
+            animation: pulse-reflect 1.8s ease-in-out infinite;
         }
 
         .shutdown .lamp {
@@ -609,16 +641,94 @@
             to { transform: rotate(360deg); }
         }
 
-        @keyframes flicker {
-            0%, 100% { opacity: 0.86; }
-            25% { opacity: 0.22; }
-            42% { opacity: 0.92; }
-            73% { opacity: 0.1; }
+        /* FLICKER PATTERNS FOR EMOTIONS */
+        
+        @keyframes pulse-smooth {
+            0%, 100% { opacity: 0.88; }
+            50% { opacity: 0.96; }
+        }
+
+        @keyframes flicker-gentle {
+            0%, 100% { opacity: 0.90; }
+            20% { opacity: 0.85; }
+            40% { opacity: 0.92; }
+            60% { opacity: 0.87; }
+            80% { opacity: 0.94; }
+        }
+
+        @keyframes flicker-stutter {
+            0%, 100% { opacity: 0.70; }
+            10% { opacity: 0.40; }
+            20% { opacity: 0.72; }
+            30% { opacity: 0.35; }
+            50% { opacity: 0.75; }
+            70% { opacity: 0.38; }
+            90% { opacity: 0.72; }
+        }
+
+        @keyframes flicker-irregular {
+            0% { opacity: 0.60; }
+            8% { opacity: 0.45; }
+            16% { opacity: 0.65; }
+            24% { opacity: 0.42; }
+            32% { opacity: 0.68; }
+            48% { opacity: 0.50; }
+            64% { opacity: 0.62; }
+            72% { opacity: 0.38; }
+            88% { opacity: 0.60; }
+            100% { opacity: 0.58; }
+        }
+
+        @keyframes pulse-melancholic {
+            0%, 100% { opacity: 0.50; }
+            50% { opacity: 0.42; }
+        }
+
+        @keyframes flicker-sharp {
+            0%, 100% { opacity: 0.62; }
+            5% { opacity: 0.20; }
+            10% { opacity: 0.65; }
+            25% { opacity: 0.18; }
+            40% { opacity: 0.64; }
+            55% { opacity: 0.22; }
+            70% { opacity: 0.60; }
+            85% { opacity: 0.25; }
+        }
+
+        @keyframes flicker-aggressive {
+            0%, 100% { opacity: 0.55; }
+            3% { opacity: 0.15; }
+            6% { opacity: 0.58; }
+            12% { opacity: 0.10; }
+            18% { opacity: 0.60; }
+            28% { opacity: 0.20; }
+            38% { opacity: 0.50; }
+            48% { opacity: 0.12; }
+            62% { opacity: 0.55; }
+            76% { opacity: 0.18; }
+            88% { opacity: 0.52; }
         }
 
         @keyframes strobe {
-            0%, 100% { opacity: 0.98; }
+            0%, 100% { opacity: 0.25; }
             50% { opacity: 0.02; }
+        }
+
+        @keyframes flicker-flutter {
+            0%, 100% { opacity: 0.78; }
+            12% { opacity: 0.68; }
+            24% { opacity: 0.82; }
+            36% { opacity: 0.70; }
+            48% { opacity: 0.80; }
+            60% { opacity: 0.72; }
+            72% { opacity: 0.81; }
+            84% { opacity: 0.69; }
+        }
+
+        @keyframes pulse-reflect {
+            0%, 100% { opacity: 0.72; }
+            40% { opacity: 0.65; }
+            60% { opacity: 0.76; }
         }
 
         @keyframes rattle {
@@ -759,16 +869,283 @@
 
         function choose(message) {
             const m = message.toLowerCase();
-            if (/(pizza|fries|chips|burger|soda|candy|junk|sugar)/.test(m)) return 'judgy';
-            if (/(salad|veg|greens|healthy|fruit|water|protein)/.test(m)) return 'approve';
-            if (/(gossip|meeting|manager|team|debate|conversation|office|argument)/.test(m)) return 'eavesdrop';
-            if (/(angry|fight|hate|toxic|awful|disgusting)/.test(m)) return 'hostile';
-            if (/(cold|temperature|freeze|fridge|door)/.test(m)) return 'machine';
+            
+            // Happy, Ecstatic, Agreement
+            if (/(thank|thanks|love|awesome|great|perfect|amazing|excellent|wonderful|best|brilliant)/.test(m)) return 'ecstatic';
+            if (/(yes|agree|right|correct|true|indeed|absolutely|exactly|indeed|makes sense)/.test(m)) return 'agreeing';
+            if (/(salad|veg|greens|healthy|fruit|water|protein|balanced|nutrition|good food)/.test(m)) return 'happy';
+            
+            // Annoyed, Upset, Disagreeing
+            if (/(no|wrong|incorrect|false|disagree|nonsense|ridiculous)/.test(m)) return 'disagreeing';
+            if (/(ugh|annoying|ugh|dumb|stupid|really\?|seriously\?)/.test(m)) return 'annoyed';
+            if (/(bad|terrible|disgusting|gross|awful|hate|yuck|eww)/.test(m)) return 'upset';
+            
+            // Sad, Tired
+            if (/(lonely|empty|nothing|sad|depressed|gone|used up|tired)/.test(m)) return 'sad';
+            if (/(boring|nothing|same old|another day|repeat|monotone|exhausted|done)/.test(m)) return 'tired';
+            
+            // Angry, Hostile
+            if (/(junk|pizza|fries|chips|burger|soda|candy|sugar|trash|garbage|crap)/.test(m)) return 'angry';
+            if (/(angry|fight|hate|toxic|toxic|awful|disgusting|unacceptable)/.test(m)) return 'hostile';
+            
+            // Observant, Curious
+            if (/(gossip|meeting|manager|team|debate|conversation|office|argument|drama|tea)/.test(m)) return 'eavesdrop';
+            if (/(how|why|what|tell me|explain|curious|interesting|fascinated)/.test(m)) return 'curious';
+            
+            // Meta/Technical
+            if (/(cold|temperature|freeze|fridge|door|me|my|self|myself)/.test(m)) return 'introspective';
+            
             return 'neutral';
         }
 
+        // EMOTION CODEC: Maps emotion to specific fridge behavior
+        const emotionMap = {
+            ecstatic: {
+                light: 0.98,
+                hue: 190,
+                fan: 2.2,
+                fanOpacity: 0.82,
+                grain: 0.16,
+                doorClose: 0,
+                doorAngle: 0,
+                aberration: 1.2,
+                flickerPattern: 'pulse', // smooth pulse, no flicker
+                humPitch: 68,
+                fanPitch: 135,
+                humLevel: 0.022,
+                fanLevel: 0.009,
+                duration: 1800,
+                description: '✓ Fridge is ECSTATIC: Very bright, cool-blue, fast spinning fan, smooth pulsing light'
+            },
+            agreeing: {
+                light: 0.92,
+                hue: 195,
+                fan: 1.85,
+                fanOpacity: 0.78,
+                grain: 0.18,
+                doorClose: 0,
+                doorAngle: 0,
+                aberration: 0.8,
+                flickerPattern: 'none',
+                humPitch: 62,
+                fanPitch: 125,
+                humLevel: 0.019,
+                fanLevel: 0.007,
+                duration: 1600,
+                description: '✓ Fridge AGREES: Bright, steady fan, calm coherent rhythm'
+            },
+            happy: {
+                light: 0.96,
+                hue: 185,
+                fan: 2.0,
+                fanOpacity: 0.75,
+                grain: 0.15,
+                doorClose: 0,
+                doorAngle: 0,
+                aberration: 0.5,
+                flickerPattern: 'gentle',
+                humPitch: 65,
+                fanPitch: 140,
+                humLevel: 0.021,
+                fanLevel: 0.008,
+                duration: 2000,
+                description: '✓ Fridge is HAPPY: Bright, gentle flicker, warm tone, healthy approval'
+            },
+            annoyed: {
+                light: 0.68,
+                hue: 30,
+                fan: 1.2,
+                fanOpacity: 0.88,
+                grain: 0.31,
+                doorClose: 0.08,
+                doorAngle: 6,
+                aberration: 3.2,
+                flickerPattern: 'stutter',
+                humPitch: 48,
+                fanPitch: 175,
+                humLevel: 0.024,
+                fanLevel: 0.012,
+                duration: 1400,
+                description: '✗ Fridge is ANNOYED: Dim yellowish, stuttering flicker, door slightly cracked, irritated tone'
+            },
+            upset: {
+                light: 0.55,
+                hue: 220,
+                fan: 0.95,
+                fanOpacity: 0.92,
+                grain: 0.36,
+                doorClose: 0.12,
+                doorAngle: 10,
+                aberration: 4.5,
+                flickerPattern: 'irregular',
+                humPitch: 44,
+                fanPitch: 195,
+                humLevel: 0.026,
+                fanLevel: 0.014,
+                duration: 1300,
+                description: '✗ Fridge is UPSET: Dark blue, irregular stuttering, unstable fan, door closing'
+            },
+            sad: {
+                light: 0.48,
+                hue: 225,
+                fan: 0.75,
+                fanOpacity: 0.68,
+                grain: 0.34,
+                doorClose: 0,
+                doorAngle: 0,
+                aberration: 2.8,
+                flickerPattern: 'pulse-dim',
+                humPitch: 38,
+                fanPitch: 110,
+                humLevel: 0.014,
+                fanLevel: 0.005,
+                duration: 2400,
+                description: '✗ Fridge is SAD: Very dim blue, slow melancholic breathing rhythm, subdued'
+            },
+            tired: {
+                light: 0.38,
+                hue: 210,
+                fan: 0.6,
+                fanOpacity: 0.52,
+                grain: 0.38,
+                doorClose: 0.05,
+                doorAngle: 2,
+                aberration: 1.5,
+                flickerPattern: 'none',
+                humPitch: 34,
+                fanPitch: 95,
+                humLevel: 0.011,
+                fanLevel: 0.003,
+                duration: 2800,
+                description: '✗ Fridge is TIRED: Very dim, barely spinning fan, sluggish, minimal energy'
+            },
+            disagreeing: {
+                light: 0.62,
+                hue: 215,
+                fan: 1.05,
+                fanOpacity: 0.84,
+                grain: 0.29,
+                doorClose: 0.15,
+                doorAngle: 14,
+                aberration: 5.2,
+                flickerPattern: 'sharp',
+                humPitch: 50,
+                fanPitch: 160,
+                humLevel: 0.023,
+                fanLevel: 0.011,
+                duration: 1500,
+                description: '✗ Fridge DISAGREES: Cool dark blue, sharp flicker, door partially closed, skeptical'
+            },
+            angry: {
+                light: 0.50,
+                hue: 12,
+                fan: 1.3,
+                fanOpacity: 0.96,
+                grain: 0.39,
+                doorClose: 0.28,
+                doorAngle: 26,
+                aberration: 8.5,
+                flickerPattern: 'aggressive',
+                humPitch: 52,
+                fanPitch: 220,
+                humLevel: 0.029,
+                fanLevel: 0.016,
+                duration: 1600,
+                description: '✗ Fridge is ANGRY: Red tint, aggressive flicker, door slamming, angry buzz'
+            },
+            hostile: {
+                light: 0.22,
+                hue: 8,
+                fan: 0.45,
+                fanOpacity: 1,
+                grain: 0.42,
+                doorClose: 0.56,
+                doorAngle: 42,
+                aberration: 11,
+                flickerPattern: 'strobe',
+                humPitch: 42,
+                fanPitch: 250,
+                humLevel: 0.032,
+                fanLevel: 0.018,
+                duration: 900,
+                description: '✗ Fridge is HOSTILE: Almost shutdown, rapid strobe, door slamming shut, chaotic'
+            },
+            eavesdrop: {
+                light: 0.78,
+                hue: 216,
+                fan: 1.15,
+                fanOpacity: 0.86,
+                grain: 0.26,
+                doorClose: 0.1,
+                doorAngle: 8,
+                aberration: 3.8,
+                flickerPattern: 'flutter',
+                humPitch: 56,
+                fanPitch: 168,
+                humLevel: 0.020,
+                fanLevel: 0.010,
+                duration: 2200,
+                description: '◆ Fridge is EAVESDROPPING: Attentive fluttering light, leaning in, curious'
+            },
+            curious: {
+                light: 0.86,
+                hue: 205,
+                fan: 1.65,
+                fanOpacity: 0.80,
+                grain: 0.22,
+                doorClose: 0.02,
+                doorAngle: 3,
+                aberration: 1.8,
+                flickerPattern: 'gentle',
+                humPitch: 60,
+                fanPitch: 145,
+                humLevel: 0.020,
+                fanLevel: 0.008,
+                duration: 2000,
+                description: '◆ Fridge is CURIOUS: Interested bright light, gentle flutter, contemplative'
+            },
+            introspective: {
+                light: 0.72,
+                hue: 212,
+                fan: 1.1,
+                fanOpacity: 0.75,
+                grain: 0.27,
+                doorClose: 0.22,
+                doorAngle: 18,
+                aberration: 4.2,
+                flickerPattern: 'pulse-reflect',
+                humPitch: 54,
+                fanPitch: 155,
+                humLevel: 0.018,
+                fanLevel: 0.009,
+                duration: 2600,
+                description: '◆ Fridge is INTROSPECTIVE: Thoughtful light, door slightly open, reflective'
+            },
+            neutral: {
+                light: 0.84,
+                hue: 198,
+                fan: 1.35,
+                fanOpacity: 0.76,
+                grain: 0.24,
+                doorClose: 0.07,
+                doorAngle: 5,
+                aberration: 2.0,
+                flickerPattern: 'none',
+                humPitch: 58,
+                fanPitch: 148,
+                humLevel: 0.017,
+                fanLevel: 0.008,
+                duration: 1800,
+                description: '○ Fridge is NEUTRAL: Default contemplative state'
+            }
+        };
+
         function clearStates() {
-            screen.classList.remove('flicker', 'strobe', 'shutdown', 'rattle', 'shiver');
+            screen.classList.remove(
+                'pulse-smooth', 'flicker-gentle', 'flicker-stutter', 'flicker-irregular',
+                'pulse-melancholic', 'flicker-sharp', 'flicker-aggressive', 'strobe',
+                'flicker-flutter', 'pulse-reflect', 'flicker', 'shutdown', 'rattle', 'shiver'
+            );
         }
 
         function bootAudio() {
@@ -809,109 +1186,53 @@
             fanGain.gain.linearRampToValueAtTime(fanLevel, now + 0.22);
         }
 
-        function react(type) {
+        function react(emotion) {
             clearStates();
+            const config = emotionMap[emotion] || emotionMap.neutral;
+            
+            mood.light = config.light;
+            mood.hue = config.hue;
+            mood.fan = config.fan;
+            mood.fanOpacity = config.fanOpacity;
+            mood.grain = config.grain;
+            mood.doorClose = config.doorClose;
+            mood.doorAngle = config.doorAngle;
+            mood.aberration = config.aberration;
+            
+            console.log(config.description);
 
-            if (type === 'judgy') {
-                mood.light = 0.62;
-                mood.hue = 44;
-                mood.fan = 0.65;
-                mood.fanOpacity = 0.95;
-                mood.grain = 0.34;
-                mood.doorClose = 0.18;
-                mood.doorAngle = 18;
-                mood.aberration = 8;
-                shake += 2.9;
-                rumble += 0.9;
-                screen.classList.add('flicker', 'rattle');
-                setSound(0.025, 46, 0.016, 220);
-            } else if (type === 'approve') {
-                mood.light = 0.98;
-                mood.hue = 190;
-                mood.fan = 1.9;
-                mood.fanOpacity = 0.65;
-                mood.grain = 0.18;
-                mood.doorClose = 0;
-                mood.doorAngle = 0;
-                mood.aberration = 1.5;
-                shake += 0.35;
-                screen.classList.add('shiver');
-                setSound(0.018, 64, 0.006, 130);
-            } else if (type === 'eavesdrop') {
-                mood.light = 0.78;
-                mood.hue = 216;
-                mood.fan = 1.15;
-                mood.fanOpacity = 0.86;
-                mood.grain = 0.27;
-                mood.doorClose = 0.11;
-                mood.doorAngle = 12;
-                mood.aberration = 4;
-                shake += 1.15;
-                screen.classList.add('flicker', 'shiver');
-                setSound(0.02, 56, 0.011, 170);
-            } else if (type === 'hostile') {
-                mood.light = 0.3;
-                mood.hue = 10;
-                mood.fan = 0.45;
-                mood.fanOpacity = 1;
-                mood.grain = 0.4;
-                mood.doorClose = 0.5;
-                mood.doorAngle = 36;
-                mood.aberration = 12;
-                shake += 4.2;
-                rumble += 1.5;
-                screen.classList.add('strobe', 'rattle');
-                setSound(0.032, 42, 0.021, 260);
-                setTimeout(() => {
-                    screen.classList.add('shutdown');
-                    mood.light = 0.04;
-                    mood.doorClose = 0.62;
-                    mood.doorAngle = 45;
-                    setSound(0.003, 34, 0.001, 50);
-                }, 900);
-            } else if (type === 'machine') {
-                mood.light = 0.9;
-                mood.hue = 205;
-                mood.fan = 0.9;
-                mood.fanOpacity = 0.9;
-                mood.grain = 0.25;
-                mood.doorClose = 0.22;
-                mood.doorAngle = 24;
-                mood.aberration = 6;
-                shake += 1.9;
-                screen.classList.add('flicker');
-                setSound(0.02, 52, 0.013, 200);
-                setTimeout(() => {
-                    mood.doorClose = 0;
-                    mood.doorAngle = 0;
-                    mood.light = 0.86;
-                }, 520);
-            } else {
-                mood.light = 0.84;
-                mood.hue = 198;
-                mood.fan = 1.35;
-                mood.fanOpacity = 0.76;
-                mood.grain = 0.24;
-                mood.doorClose = 0.07;
-                mood.doorAngle = 8;
-                mood.aberration = 3;
-                shake += 0.7;
-                screen.classList.add('shiver');
-                setSound(0.017, 58, 0.008, 150);
+            // Apply flicker patterns
+            if (config.flickerPattern === 'pulse') {
+                screen.classList.add('pulse-smooth');
+            } else if (config.flickerPattern === 'gentle') {
+                screen.classList.add('flicker-gentle');
+            } else if (config.flickerPattern === 'stutter') {
+                screen.classList.add('flicker-stutter');
+            } else if (config.flickerPattern === 'irregular') {
+                screen.classList.add('flicker-irregular');
+            } else if (config.flickerPattern === 'pulse-dim') {
+                screen.classList.add('pulse-melancholic');
+            } else if (config.flickerPattern === 'sharp') {
+                screen.classList.add('flicker-sharp');
+            } else if (config.flickerPattern === 'aggressive') {
+                screen.classList.add('flicker-aggressive');
+            } else if (config.flickerPattern === 'strobe') {
+                screen.classList.add('strobe');
+            } else if (config.flickerPattern === 'flutter') {
+                screen.classList.add('flicker-flutter');
+            } else if (config.flickerPattern === 'pulse-reflect') {
+                screen.classList.add('pulse-reflect');
             }
 
+            // Play sound
+            setSound(config.humLevel, config.humPitch, config.fanLevel, config.fanPitch);
+            
+            // Auto-reset after reaction duration
             setTimeout(() => {
                 clearStates();
-                mood.light = 0.9;
-                mood.hue = 202;
-                mood.fan = 1.6;
-                mood.fanOpacity = 0.75;
-                mood.grain = 0.22;
-                mood.doorClose = 0;
-                mood.doorAngle = 0;
-                mood.aberration = 0;
-                setSound(0.013, 56, 0.006, 120);
-            }, 2400 + Math.random() * 1700);
+                Object.assign(mood, emotionMap.neutral);
+                setSound(emotionMap.neutral.humLevel, emotionMap.neutral.humPitch, emotionMap.neutral.fanLevel, emotionMap.neutral.fanPitch);
+            }, config.duration);
         }
 
         function tick(time) {
