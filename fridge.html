@@ -1401,6 +1401,16 @@
         });
 
         window.addEventListener('keydown', (event) => {
+            const active = document.activeElement;
+            const isTypingTarget = active === askInput ||
+                active?.tagName === 'INPUT' ||
+                active?.tagName === 'TEXTAREA' ||
+                active?.isContentEditable;
+
+            if (isTypingTarget) {
+                return;
+            }
+
             keys.add(event.code);
             if (event.code === 'Space') {
                 shake += 0.6;
@@ -1409,6 +1419,16 @@
         });
 
         window.addEventListener('keyup', (event) => {
+            const active = document.activeElement;
+            const isTypingTarget = active === askInput ||
+                active?.tagName === 'INPUT' ||
+                active?.tagName === 'TEXTAREA' ||
+                active?.isContentEditable;
+
+            if (isTypingTarget) {
+                return;
+            }
+
             keys.delete(event.code);
         });
 
