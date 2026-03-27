@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fridge POV</title>
+    <style>
+        :root {
+            --light-opacity: 0.92;
+            --light-hue: 202deg;
+            --fan-speed: 1.6s;
+            --fan-opacity: 0.75;
+            --vibe: 0;
+            --grain-opacity: 0.22;
+            --door-close: 0;
+            --cam-x: 0deg;
+            --cam-y: 0deg;
+            --cam-z: -290px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #02070d;
+            font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+        }
+
+        .screen {
+            position: fixed;
+            inset: 0;
+            perspective: 1300px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 50% 0%, rgba(185, 223, 245, 0.18), transparent 30%),
+                radial-gradient(circle at 50% 110%, rgba(0, 0, 0, 0.6), transparent 40%),
+                #050a10;
+        }
+
+        .camera {
+            position: absolute;
+            inset: 0;
+            transform-style: preserve-3d;
+            will-change: transform;
+            transform: translate3d(0, 0, var(--cam-z)) rotateX(var(--cam-x)) rotateY(var(--cam-y));
+        }
+
+        .cavity {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: min(130vw, 1600px);
+            aspect-ratio: 1.04;
+            transform-style: preserve-3d;
+            transform: translate3d(-50%, -50%, -280px);
+            filter: saturate(0.9) contrast(1.1);
+        }
+
+        .wall {
+            position: absolute;
+            border-radius: 30px;
+            background:
+                linear-gradient(170deg, #f2f6f9 0%, #dbe2e8 48%, #aeb9c4 100%),
+                radial-gradient(circle at 60% 10%, rgba(255, 255, 255, 0.65), transparent 28%);
+            box-shadow:
+                inset 0 0 90px rgba(90, 111, 126, 0.42),
+                inset 0 -45px 70px rgba(40, 55, 68, 0.35);
+            overflow: hidden;
+        }
+
+        .wall::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 14% 24%, rgba(105, 68, 38, 0.22), transparent 22%),
+                radial-gradient(circle at 82% 61%, rgba(127, 79, 42, 0.2), transparent 25%),
+                linear-gradient(0deg, rgba(59, 70, 78, 0.25) 0%, transparent 26%),
+                repeating-linear-gradient(96deg, rgba(255, 255, 255, 0.04) 0 2px, rgba(0, 0, 0, 0.04) 2px 4px);
+            mix-blend-mode: multiply;
+            opacity: 0.75;
+        }
+
+        .back {
+            inset: 7% 9.5%;
+            background:
+                radial-gradient(circle at 50% 22%, hsla(var(--light-hue), 82%, 90%, calc(var(--light-opacity) * 0.45)), transparent 37%),
+                linear-gradient(180deg, #f5f8fa 0%, #dce4ea 56%, #c2cfd9 100%);
+        }
+
+        .left,
+        .right {
+            width: 12%;
+            height: 86%;
+            top: 7%;
+            border-radius: 24px;
+        }
+
+        .left {
+            left: 9.5%;
+            transform-origin: left center;
+            transform: rotateY(89deg) translateZ(2px);
+        }
+
+        .right {
+            right: 9.5%;
+            transform-origin: right center;
+            transform: rotateY(-89deg) translateZ(2px);
+        }
+
+        .ceiling,
+        .floor {
+            width: 81%;
+            height: 11%;
+            left: 9.5%;
+            border-radius: 24px;
+        }
+
+        .ceiling {
+            top: 7%;
+            transform-origin: center top;
+            transform: rotateX(-89deg);
+        }
+
+        .floor {
+            bottom: 7%;
+            transform-origin: center bottom;
+            transform: rotateX(89deg);
+        }
+
+        .gasket {
+            position: absolute;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #cad2da, #8f9ca8);
+            box-shadow:
+                inset 0 1px 4px rgba(255, 255, 255, 0.6),
+                inset 0 -2px 7px rgba(30, 43, 54, 0.45),
+                0 0 12px rgba(0, 0, 0, 0.36);
+            transform: translateZ(255px);
+        }
+
+        .gasket.top,
+        .gasket.bottom {
+            width: 81%;
+            height: 2.3%;
+            left: 9.5%;
+        }
+
+        .gasket.top { top: 8.4%; }
+        .gasket.bottom { bottom: 8.4%; }
+
+        .gasket.left,
+        .gasket.right {
+            width: 2.2%;
+            height: 84.2%;
+            top: 7.9%;
+        }
+
+        .gasket.left { left: 9.5%; }
+        .gasket.right { right: 9.5%; }
+
+        .lamp {
+            position: absolute;
+            width: 31%;
+            height: 5%;
+            left: 34.5%;
+            top: 10.5%;
+            border-radius: 999px;
+            transform: translateZ(185px);
+            background:
+                linear-gradient(90deg, rgba(235, 243, 248, 0.5), rgba(255, 255, 255, 0.95), rgba(235, 243, 248, 0.5));
+            box-shadow:
+                0 0 85px hsla(var(--light-hue), 95%, 84%, calc(var(--light-opacity) * 0.98)),
+                0 0 150px hsla(var(--light-hue), 95%, 85%, calc(var(--light-opacity) * 0.4)),
+                inset 0 0 10px rgba(255, 255, 255, 0.9);
+            opacity: var(--light-opacity);
+        }
+
+        .shelf {
+            position: absolute;
+            left: 12.4%;
+            width: 75.2%;
+            height: 3.4%;
+            border-radius: 14px;
+            transform: translateZ(170px) rotateX(79deg);
+            background:
+                linear-gradient(180deg, rgba(236, 246, 252, 0.66), rgba(170, 194, 211, 0.2));
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            box-shadow:
+                0 8px 20px rgba(25, 45, 61, 0.35),
+                inset 0 -8px 10px rgba(96, 127, 148, 0.2);
+            overflow: hidden;
+        }
+
+        .shelf::after {
+            content: '';
+            position: absolute;
+            inset: -18% 1% auto;
+            height: 34%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.52), transparent);
+        }
+
+        .shelf.top { top: 30%; }
+        .shelf.mid { top: 48%; }
+        .shelf.low { top: 66%; }
+
+        .drawer {
+            position: absolute;
+            width: 72%;
+            height: 12%;
+            left: 14%;
+            top: 76%;
+            transform: translateZ(145px) rotateX(79deg);
+            border-radius: 18px;
+            background:
+                linear-gradient(180deg, rgba(231, 244, 251, 0.65), rgba(125, 165, 191, 0.2));
+            border: 1px solid rgba(255, 255, 255, 0.48);
+            box-shadow: inset 0 -20px 24px rgba(52, 82, 105, 0.28);
+        }
+
+        .fan {
+            position: absolute;
+            width: 16%;
+            aspect-ratio: 1;
+            left: 42%;
+            top: 20%;
+            transform: translateZ(3px);
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 50% 50%, rgba(20, 35, 46, 0.4) 0 24%, rgba(88, 114, 132, 0.45) 24% 48%, rgba(173, 196, 212, 0.5) 49% 62%, transparent 62%);
+            box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.23);
+            opacity: var(--fan-opacity);
+        }
+
+        .fan::before {
+            content: '';
+            position: absolute;
+            inset: 19%;
+            border-radius: 50%;
+            background:
+                conic-gradient(from 0deg, rgba(44, 65, 82, 0.94) 0 20%, rgba(175, 201, 220, 0.2) 20% 33%, rgba(44, 65, 82, 0.9) 33% 54%, rgba(175, 201, 220, 0.2) 54% 68%, rgba(44, 65, 82, 0.88) 68% 86%, rgba(175, 201, 220, 0.2) 86% 100%);
+            animation: spin var(--fan-speed) linear infinite;
+            filter: blur(0.3px);
+        }
+
+        .door {
+            position: absolute;
+            width: 36%;
+            height: 86%;
+            top: 7%;
+            right: 8.8%;
+            transform-origin: right center;
+            transform-style: preserve-3d;
+            transform: translateZ(267px) rotateY(-62deg);
+            animation: door-idle 9s ease-in-out infinite;
+        }
+
+        @keyframes door-idle {
+            0%, 100% { transform: translateZ(267px) rotateY(-62deg); }
+            50% { transform: translateZ(267px) rotateY(-60deg); }
+        }
+
+        .door-panel {
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            background:
+                linear-gradient(165deg, #e9eef2 0%, #a5b4c0 100%);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            box-shadow:
+                inset 0 0 35px rgba(84, 110, 130, 0.35),
+                0 18px 30px rgba(11, 21, 28, 0.46);
+        }
+
+        .door-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            background:
+                radial-gradient(circle at 18% 80%, rgba(122, 76, 41, 0.24), transparent 28%),
+                radial-gradient(circle at 82% 20%, rgba(98, 58, 29, 0.19), transparent 20%),
+                repeating-linear-gradient(100deg, rgba(255, 255, 255, 0.03) 0 3px, rgba(0, 0, 0, 0.04) 3px 6px);
+            mix-blend-mode: multiply;
+            opacity: 0.86;
+        }
+
+        .bin {
+            position: absolute;
+            left: 10%;
+            width: 80%;
+            height: 17%;
+            border-radius: 12px;
+            background:
+                linear-gradient(180deg, rgba(231, 245, 251, 0.54), rgba(130, 170, 197, 0.26));
+            border: 1px solid rgba(255, 255, 255, 0.52);
+            box-shadow: inset 0 -12px 14px rgba(58, 90, 114, 0.26);
+            overflow: hidden;
+        }
+
+        .bin::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 20% 80%, rgba(91, 56, 32, 0.25), transparent 22%),
+                radial-gradient(circle at 78% 20%, rgba(94, 60, 35, 0.2), transparent 20%);
+            opacity: 0.55;
+        }
+
+        .bin.one { top: 15%; }
+        .bin.two { top: 40%; }
+        .bin.three { top: 65%; }
+
+        .bin-item {
+            position: absolute;
+            bottom: 12%;
+            width: 24%;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            box-shadow: 0 10px 14px rgba(27, 47, 62, 0.35);
+        }
+
+        .bin-item.a {
+            left: 8%;
+            height: 58%;
+            background: linear-gradient(180deg, #fbe8cf, #cb8b42);
+        }
+
+        .bin-item.b {
+            left: 38%;
+            height: 68%;
+            background: linear-gradient(180deg, #d9ecf7, #6c9fbe);
+        }
+
+        .bin-item.c {
+            left: 68%;
+            height: 50%;
+            background: linear-gradient(180deg, #d9edd8, #6ca06d);
+        }
+
+        .food {
+            position: absolute;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            box-shadow: 0 14px 18px rgba(17, 29, 40, 0.35);
+            transform-style: preserve-3d;
+        }
+
+        .food.milk {
+            width: 9%;
+            height: 22%;
+            left: 22%;
+            top: 43%;
+            transform: translateZ(212px);
+            background: linear-gradient(180deg, #f4f8fb, #c6d5df 82%);
+        }
+
+        .food.soda {
+            width: 6%;
+            height: 20%;
+            left: 36%;
+            top: 58%;
+            transform: translateZ(196px);
+            background: linear-gradient(180deg, #f6e460, #c5871f 90%);
+        }
+
+        .food.container {
+            width: 14%;
+            height: 12%;
+            left: 65%;
+            top: 38%;
+            transform: translateZ(205px);
+            background: linear-gradient(150deg, #f9fbfd, #9fb2c2);
+        }
+
+        .food.greens {
+            width: 13%;
+            height: 10%;
+            left: 20%;
+            top: 76.5%;
+            transform: translateZ(186px);
+            border-radius: 14px;
+            background: linear-gradient(140deg, #9ce58a, #3f9756);
+        }
+
+        .grime-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 12% 88%, rgba(52, 36, 19, 0.34), transparent 18%),
+                radial-gradient(circle at 85% 82%, rgba(60, 39, 16, 0.28), transparent 20%),
+                radial-gradient(circle at 54% 32%, rgba(130, 145, 152, 0.22), transparent 26%),
+                repeating-linear-gradient(110deg, rgba(0, 0, 0, 0.03) 0 2px, rgba(255, 255, 255, 0.02) 2px 4px);
+            mix-blend-mode: multiply;
+            opacity: 0.82;
+        }
+
+        .grain {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0.7px, transparent 0.8px);
+            background-size: 3px 3px;
+            opacity: var(--grain-opacity);
+            mix-blend-mode: soft-light;
+        }
+
+        .vignette {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% 52%, transparent 46%, rgba(0, 0, 0, 0.72) 100%);
+        }
+
+        .door-shadow {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(90deg, transparent 35%, rgba(3, 6, 10, 0.98) 78%);
+            transform: translateX(calc(var(--door-close) * 58%));
+            transition: transform 0.28s cubic-bezier(0.18, 0.73, 0.23, 1.05);
+        }
+
+        .flicker .lamp {
+            animation: flicker 0.12s steps(2, end) infinite;
+        }
+
+        .strobe .lamp {
+            animation: strobe 0.06s steps(2, end) infinite;
+        }
+
+        .shutdown .lamp {
+            animation: none;
+            opacity: 0.02;
+            box-shadow: none;
+        }
+
+        .shutdown .fan::before {
+            animation-play-state: paused;
+        }
+
+        .rattle .cavity {
+            animation: rattle 0.08s linear infinite;
+        }
+
+        .shiver .cavity {
+            animation: shiver 0.28s ease-in-out infinite;
+        }
+
+        .input-shell {
+            position: fixed;
+            left: 50%;
+            bottom: 16px;
+            transform: translateX(-50%);
+            z-index: 30;
+            width: min(320px, 72vw);
+            border-radius: 12px;
+            border: 1px solid rgba(216, 239, 255, 0.38);
+            background: rgba(209, 232, 247, 0.16);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px) saturate(1.2);
+            overflow: hidden;
+        }
+
+        .input-shell input {
+            width: 100%;
+            border: 0;
+            outline: none;
+            color: rgba(242, 249, 255, 0.9);
+            background: transparent;
+            padding: 9px 12px;
+            font-size: 12px;
+            letter-spacing: 0.02em;
+        }
+
+        .input-shell input::placeholder {
+            color: transparent;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 0.86; }
+            25% { opacity: 0.22; }
+            42% { opacity: 0.92; }
+            73% { opacity: 0.1; }
+        }
+
+        @keyframes strobe {
+            0%, 100% { opacity: 0.98; }
+            50% { opacity: 0.02; }
+        }
+
+        @keyframes rattle {
+            0%, 100% { transform: translate3d(-50%, -50%, -280px); }
+            25% { transform: translate3d(-50.35%, -49.75%, -280px) rotateZ(0.12deg); }
+            75% { transform: translate3d(-49.7%, -50.25%, -280px) rotateZ(-0.12deg); }
+        }
+
+        @keyframes shiver {
+            0%, 100% { transform: translate3d(-50%, -50%, -280px); }
+            50% { transform: translate3d(-50.13%, -49.87%, -280px); }
+        }
+
+        @media (max-width: 900px) {
+            .cavity {
+                width: 165vw;
+            }
+
+            :root {
+                --cam-z: -250px;
+            }
+
+            .input-shell {
+                width: min(280px, 82vw);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="screen" id="screen">
+        <div class="camera" id="camera">
+            <div class="cavity" id="cavity">
+                <div class="wall back"></div>
+                <div class="wall left"></div>
+                <div class="wall right"></div>
+                <div class="wall ceiling"></div>
+                <div class="wall floor"></div>
+
+                <div class="gasket top"></div>
+                <div class="gasket bottom"></div>
+                <div class="gasket left"></div>
+                <div class="gasket right"></div>
+
+                <div class="lamp" id="lamp"></div>
+                <div class="fan"></div>
+
+                <div class="shelf top"></div>
+                <div class="shelf mid"></div>
+                <div class="shelf low"></div>
+                <div class="drawer"></div>
+
+                <div class="door" id="door">
+                    <div class="door-panel"></div>
+                    <div class="bin one">
+                        <div class="bin-item a"></div>
+                        <div class="bin-item b"></div>
+                        <div class="bin-item c"></div>
+                    </div>
+                    <div class="bin two">
+                        <div class="bin-item a"></div>
+                        <div class="bin-item b"></div>
+                        <div class="bin-item c"></div>
+                    </div>
+                    <div class="bin three">
+                        <div class="bin-item a"></div>
+                        <div class="bin-item b"></div>
+                        <div class="bin-item c"></div>
+                    </div>
+                </div>
+
+                <div class="food milk"></div>
+                <div class="food soda"></div>
+                <div class="food container"></div>
+                <div class="food greens"></div>
+
+                <div class="grime-layer"></div>
+                <div class="grain"></div>
+            </div>
+        </div>
+        <div class="door-shadow" id="doorShadow"></div>
+        <div class="vignette"></div>
+    </div>
+
+    <form class="input-shell" id="askForm" aria-label="fridge-input">
+        <input id="askInput" type="text" aria-label="input" autocomplete="off">
+    </form>
+
+    <script>
+        const root = document.documentElement;
+        const screen = document.getElementById('screen');
+        const askForm = document.getElementById('askForm');
+        const askInput = document.getElementById('askInput');
+
+        let mouseX = 0;
+        let mouseY = 0;
+        let baseYaw = 0;
+        let basePitch = 0;
+        let shake = 0;
+        let rumble = 0;
+        let last = performance.now();
+
+        let audioReady = false;
+        let audioCtx;
+        let humOsc;
+        let fanOsc;
+        let humGain;
+        let fanGain;
+
+        const mood = {
+            light: 0.92,
+            hue: 202,
+            fan: 1.6,
+            fanOpacity: 0.75,
+            grain: 0.22,
+            camZ: -290,
+            doorClose: 0,
+            className: ''
+        };
+
+        function clamp(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+        }
+
+        function choose(message) {
+            const m = message.toLowerCase();
+            if (/(pizza|fries|chips|burger|soda|candy|junk|sugar)/.test(m)) return 'judgy';
+            if (/(salad|veg|greens|healthy|fruit|water|protein)/.test(m)) return 'approve';
+            if (/(gossip|meeting|manager|team|debate|conversation|office|argument)/.test(m)) return 'eavesdrop';
+            if (/(angry|fight|hate|toxic|awful|disgusting)/.test(m)) return 'hostile';
+            if (/(cold|temperature|freeze|fridge|door)/.test(m)) return 'machine';
+            return 'neutral';
+        }
+
+        function clearStates() {
+            screen.classList.remove('flicker', 'strobe', 'shutdown', 'rattle', 'shiver');
+        }
+
+        function bootAudio() {
+            if (audioReady) return;
+            audioReady = true;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+            humOsc = audioCtx.createOscillator();
+            fanOsc = audioCtx.createOscillator();
+            humGain = audioCtx.createGain();
+            fanGain = audioCtx.createGain();
+
+            humOsc.type = 'sawtooth';
+            fanOsc.type = 'triangle';
+            humOsc.frequency.value = 58;
+            fanOsc.frequency.value = 120;
+
+            humGain.gain.value = 0.0001;
+            fanGain.gain.value = 0.0001;
+
+            humOsc.connect(humGain).connect(audioCtx.destination);
+            fanOsc.connect(fanGain).connect(audioCtx.destination);
+            humOsc.start();
+            fanOsc.start();
+        }
+
+        function setSound(humLevel, humPitch, fanLevel, fanPitch) {
+            if (!audioReady) return;
+            const now = audioCtx.currentTime;
+            humOsc.frequency.cancelScheduledValues(now);
+            fanOsc.frequency.cancelScheduledValues(now);
+            humGain.gain.cancelScheduledValues(now);
+            fanGain.gain.cancelScheduledValues(now);
+
+            humOsc.frequency.linearRampToValueAtTime(humPitch, now + 0.18);
+            fanOsc.frequency.linearRampToValueAtTime(fanPitch, now + 0.18);
+            humGain.gain.linearRampToValueAtTime(humLevel, now + 0.22);
+            fanGain.gain.linearRampToValueAtTime(fanLevel, now + 0.22);
+        }
+
+        function react(type) {
+            clearStates();
+
+            if (type === 'judgy') {
+                mood.light = 0.62;
+                mood.hue = 44;
+                mood.fan = 0.65;
+                mood.fanOpacity = 0.95;
+                mood.grain = 0.34;
+                mood.doorClose = 0.18;
+                shake += 2.9;
+                rumble += 0.9;
+                screen.classList.add('flicker', 'rattle');
+                setSound(0.025, 46, 0.016, 220);
+            } else if (type === 'approve') {
+                mood.light = 0.98;
+                mood.hue = 190;
+                mood.fan = 1.9;
+                mood.fanOpacity = 0.65;
+                mood.grain = 0.18;
+                mood.doorClose = 0;
+                shake += 0.35;
+                screen.classList.add('shiver');
+                setSound(0.018, 64, 0.006, 130);
+            } else if (type === 'eavesdrop') {
+                mood.light = 0.78;
+                mood.hue = 216;
+                mood.fan = 1.15;
+                mood.fanOpacity = 0.86;
+                mood.grain = 0.27;
+                mood.doorClose = 0.11;
+                shake += 1.15;
+                screen.classList.add('flicker', 'shiver');
+                setSound(0.02, 56, 0.011, 170);
+            } else if (type === 'hostile') {
+                mood.light = 0.3;
+                mood.hue = 10;
+                mood.fan = 0.45;
+                mood.fanOpacity = 1;
+                mood.grain = 0.4;
+                mood.doorClose = 0.5;
+                shake += 4.2;
+                rumble += 1.5;
+                screen.classList.add('strobe', 'rattle');
+                setSound(0.032, 42, 0.021, 260);
+                setTimeout(() => {
+                    screen.classList.add('shutdown');
+                    mood.light = 0.04;
+                    mood.doorClose = 0.62;
+                    setSound(0.003, 34, 0.001, 50);
+                }, 900);
+            } else if (type === 'machine') {
+                mood.light = 0.9;
+                mood.hue = 205;
+                mood.fan = 0.9;
+                mood.fanOpacity = 0.9;
+                mood.grain = 0.25;
+                mood.doorClose = 0.22;
+                shake += 1.9;
+                screen.classList.add('flicker');
+                setSound(0.02, 52, 0.013, 200);
+                setTimeout(() => {
+                    mood.doorClose = 0;
+                    mood.light = 0.86;
+                }, 520);
+            } else {
+                mood.light = 0.84;
+                mood.hue = 198;
+                mood.fan = 1.35;
+                mood.fanOpacity = 0.76;
+                mood.grain = 0.24;
+                mood.doorClose = 0.07;
+                shake += 0.7;
+                screen.classList.add('shiver');
+                setSound(0.017, 58, 0.008, 150);
+            }
+
+            setTimeout(() => {
+                clearStates();
+                mood.light = 0.9;
+                mood.hue = 202;
+                mood.fan = 1.6;
+                mood.fanOpacity = 0.75;
+                mood.grain = 0.22;
+                mood.doorClose = 0;
+                setSound(0.013, 56, 0.006, 120);
+            }, 2400 + Math.random() * 1700);
+        }
+
+        function tick(time) {
+            const dt = Math.min(40, time - last);
+            last = time;
+
+            baseYaw += (Math.sin(time * 0.00085) * 0.45 - baseYaw) * 0.025;
+            basePitch += (Math.cos(time * 0.00115) * 0.34 - basePitch) * 0.025;
+
+            shake *= 0.93;
+            rumble = Math.max(0, rumble * 0.96 - 0.0025);
+
+            const jitterX = (Math.sin(time * 0.028) + Math.cos(time * 0.017)) * 0.2;
+            const jitterY = (Math.cos(time * 0.025) + Math.sin(time * 0.019)) * 0.17;
+            const impulseX = (Math.random() - 0.5) * shake * 0.18;
+            const impulseY = (Math.random() - 0.5) * shake * 0.13;
+
+            const yaw = baseYaw + mouseX * 3.6 + jitterX + impulseX;
+            const pitch = 7 + basePitch + mouseY * 2.4 + jitterY + impulseY;
+            const z = mood.camZ + Math.sin(time * 0.0019) * 7 - rumble * 14;
+
+            root.style.setProperty('--cam-y', `${yaw}deg`);
+            root.style.setProperty('--cam-x', `${pitch}deg`);
+            root.style.setProperty('--cam-z', `${z.toFixed(1)}px`);
+
+            root.style.setProperty('--light-opacity', mood.light.toFixed(3));
+            root.style.setProperty('--light-hue', `${mood.hue}deg`);
+            root.style.setProperty('--fan-speed', `${mood.fan.toFixed(2)}s`);
+            root.style.setProperty('--fan-opacity', mood.fanOpacity.toFixed(3));
+            root.style.setProperty('--grain-opacity', mood.grain.toFixed(3));
+            root.style.setProperty('--door-close', mood.doorClose.toFixed(3));
+
+            requestAnimationFrame(tick);
+        }
+
+        window.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX / window.innerWidth - 0.5) * 2;
+            mouseY = (event.clientY / window.innerHeight - 0.5) * 2;
+        });
+
+        askForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const text = askInput.value.trim();
+            if (!text) return;
+            if (!audioReady) bootAudio();
+            react(choose(text));
+            askInput.value = '';
+        });
+
+        window.addEventListener('pointerdown', () => {
+            if (!audioReady) {
+                bootAudio();
+                setSound(0.013, 56, 0.006, 120);
+            }
+        }, { once: true });
+
+        requestAnimationFrame(tick);
+    </script>
+</body>
+</html>
