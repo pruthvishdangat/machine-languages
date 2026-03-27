@@ -13,9 +13,13 @@
             --vibe: 0;
             --grain-opacity: 0.22;
             --door-close: 0;
+            --door-angle: 0deg;
             --cam-x: 0deg;
             --cam-y: 0deg;
             --cam-z: -290px;
+            --cam-off-x: 0px;
+            --cam-off-y: 0px;
+            --aberration: 0px;
         }
 
         * {
@@ -49,18 +53,18 @@
             inset: 0;
             transform-style: preserve-3d;
             will-change: transform;
-            transform: translate3d(0, 0, var(--cam-z)) rotateX(var(--cam-x)) rotateY(var(--cam-y));
+            transform: translate3d(var(--cam-off-x), var(--cam-off-y), var(--cam-z)) rotateX(var(--cam-x)) rotateY(var(--cam-y));
         }
 
         .cavity {
             position: absolute;
             left: 50%;
             top: 50%;
-            width: min(130vw, 1600px);
+            width: min(134vw, 1760px);
             aspect-ratio: 1.04;
             transform-style: preserve-3d;
-            transform: translate3d(-50%, -50%, -280px);
-            filter: saturate(0.9) contrast(1.1);
+            transform: translate3d(-50%, -50%, -310px);
+            filter: saturate(0.86) contrast(1.14);
         }
 
         .wall {
@@ -93,6 +97,16 @@
             background:
                 radial-gradient(circle at 50% 22%, hsla(var(--light-hue), 82%, 90%, calc(var(--light-opacity) * 0.45)), transparent 37%),
                 linear-gradient(180deg, #f5f8fa 0%, #dce4ea 56%, #c2cfd9 100%);
+        }
+
+        .back::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(90deg, transparent 0 19%, rgba(99, 115, 126, 0.12) 19% 20%, transparent 20% 80%, rgba(99, 115, 126, 0.12) 80% 81%, transparent 81% 100%),
+                linear-gradient(0deg, transparent 0 86%, rgba(61, 82, 98, 0.16) 86% 87%, transparent 87% 100%);
+            opacity: 0.55;
         }
 
         .left,
@@ -259,7 +273,7 @@
             right: 8.8%;
             transform-origin: right center;
             transform-style: preserve-3d;
-            transform: translateZ(267px) rotateY(-62deg);
+            transform: translateZ(267px) rotateY(calc(-62deg + var(--door-angle)));
             animation: door-idle 9s ease-in-out infinite;
         }
 
@@ -392,6 +406,99 @@
             background: linear-gradient(140deg, #9ce58a, #3f9756);
         }
 
+        .thermostat {
+            position: absolute;
+            width: 8.6%;
+            height: 15.5%;
+            left: 12.2%;
+            top: 14.2%;
+            transform: translateZ(195px);
+            border-radius: 8px;
+            background: linear-gradient(180deg, #e6ddd0, #b8aa98);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            box-shadow: inset 0 -8px 10px rgba(64, 52, 40, 0.2), 0 10px 16px rgba(8, 16, 22, 0.35);
+        }
+
+        .dial {
+            position: absolute;
+            width: 68%;
+            aspect-ratio: 1;
+            left: 16%;
+            top: 14%;
+            border-radius: 50%;
+            border: 2px solid rgba(95, 76, 58, 0.55);
+            background:
+                radial-gradient(circle at 50% 50%, #faf6ef 0 58%, #d2c6b8 58% 62%, #f2e8dc 62% 100%);
+            box-shadow: inset 0 0 4px rgba(85, 63, 43, 0.35);
+        }
+
+        .dial::before {
+            content: '';
+            position: absolute;
+            width: 5%;
+            height: 43%;
+            left: 47.5%;
+            top: 12%;
+            border-radius: 999px;
+            background: #7f2c24;
+            transform: rotate(22deg);
+            transform-origin: 50% 92%;
+        }
+
+        .freezer-box {
+            position: absolute;
+            width: 43%;
+            height: 24%;
+            left: 36%;
+            top: 13.7%;
+            transform: translateZ(178px);
+            border-radius: 30px;
+            background:
+                radial-gradient(circle at 50% 40%, rgba(216, 205, 221, 0.65), rgba(148, 124, 146, 0.72) 70%, rgba(102, 81, 100, 0.7) 100%);
+            box-shadow:
+                inset 0 0 24px rgba(36, 26, 42, 0.45),
+                inset 0 -16px 20px rgba(20, 12, 24, 0.35),
+                0 18px 22px rgba(9, 14, 20, 0.45);
+            overflow: hidden;
+        }
+
+        .freezer-box::before {
+            content: '';
+            position: absolute;
+            inset: -9% -5%;
+            border-radius: 32px;
+            border: 15px solid rgba(235, 240, 246, 0.92);
+            box-shadow:
+                inset 0 0 9px rgba(255, 255, 255, 0.9),
+                0 0 12px rgba(214, 225, 238, 0.85);
+            filter: blur(0.3px);
+        }
+
+        .freezer-box::after {
+            content: '';
+            position: absolute;
+            inset: 12% 8%;
+            border-radius: 26px;
+            border: 1px solid rgba(255, 255, 255, 0.26);
+            background:
+                radial-gradient(circle at 30% 32%, rgba(235, 237, 244, 0.26), transparent 35%),
+                radial-gradient(circle at 70% 70%, rgba(186, 163, 190, 0.2), transparent 35%);
+        }
+
+        .wire-shelf {
+            position: absolute;
+            width: 76%;
+            height: 16%;
+            left: 12%;
+            top: 60%;
+            transform: translateZ(156px) rotateX(79deg);
+            border-radius: 10px;
+            background:
+                repeating-linear-gradient(90deg, rgba(222, 230, 237, 0.82) 0 3px, transparent 3px 22px),
+                linear-gradient(180deg, rgba(180, 192, 202, 0.2), rgba(108, 126, 140, 0.2));
+            box-shadow: 0 14px 16px rgba(10, 21, 29, 0.35);
+        }
+
         .grime-layer {
             position: absolute;
             inset: 0;
@@ -413,6 +520,17 @@
             background-size: 3px 3px;
             opacity: var(--grain-opacity);
             mix-blend-mode: soft-light;
+        }
+
+        .chromatic {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.38;
+            mix-blend-mode: screen;
+            background:
+                radial-gradient(circle at calc(50% - var(--aberration)), 50%, rgba(255, 74, 74, 0.11), transparent 62%),
+                radial-gradient(circle at calc(50% + var(--aberration)), 50%, rgba(54, 164, 255, 0.11), transparent 62%);
         }
 
         .vignette {
@@ -546,11 +664,14 @@
 
                 <div class="lamp" id="lamp"></div>
                 <div class="fan"></div>
+                <div class="thermostat"><div class="dial"></div></div>
+                <div class="freezer-box"></div>
 
                 <div class="shelf top"></div>
                 <div class="shelf mid"></div>
                 <div class="shelf low"></div>
                 <div class="drawer"></div>
+                <div class="wire-shelf"></div>
 
                 <div class="door" id="door">
                     <div class="door-panel"></div>
@@ -578,6 +699,7 @@
 
                 <div class="grime-layer"></div>
                 <div class="grain"></div>
+                <div class="chromatic"></div>
             </div>
         </div>
         <div class="door-shadow" id="doorShadow"></div>
@@ -596,11 +718,20 @@
 
         let mouseX = 0;
         let mouseY = 0;
-        let baseYaw = 0;
-        let basePitch = 0;
+        let yaw = 0;
+        let pitch = 7;
+        let walkX = 0;
+        let walkY = 0;
+        let walkZ = 0;
+        let velX = 0;
+        let velY = 0;
+        let velZ = 0;
+        let lookPulseX = 0;
+        let lookPulseY = 0;
         let shake = 0;
         let rumble = 0;
         let last = performance.now();
+        const keys = new Set();
 
         let audioReady = false;
         let audioCtx;
@@ -617,6 +748,8 @@
             grain: 0.22,
             camZ: -290,
             doorClose: 0,
+            doorAngle: 0,
+            aberration: 0,
             className: ''
         };
 
@@ -686,6 +819,8 @@
                 mood.fanOpacity = 0.95;
                 mood.grain = 0.34;
                 mood.doorClose = 0.18;
+                mood.doorAngle = 18;
+                mood.aberration = 8;
                 shake += 2.9;
                 rumble += 0.9;
                 screen.classList.add('flicker', 'rattle');
@@ -697,6 +832,8 @@
                 mood.fanOpacity = 0.65;
                 mood.grain = 0.18;
                 mood.doorClose = 0;
+                mood.doorAngle = 0;
+                mood.aberration = 1.5;
                 shake += 0.35;
                 screen.classList.add('shiver');
                 setSound(0.018, 64, 0.006, 130);
@@ -707,6 +844,8 @@
                 mood.fanOpacity = 0.86;
                 mood.grain = 0.27;
                 mood.doorClose = 0.11;
+                mood.doorAngle = 12;
+                mood.aberration = 4;
                 shake += 1.15;
                 screen.classList.add('flicker', 'shiver');
                 setSound(0.02, 56, 0.011, 170);
@@ -717,6 +856,8 @@
                 mood.fanOpacity = 1;
                 mood.grain = 0.4;
                 mood.doorClose = 0.5;
+                mood.doorAngle = 36;
+                mood.aberration = 12;
                 shake += 4.2;
                 rumble += 1.5;
                 screen.classList.add('strobe', 'rattle');
@@ -725,6 +866,7 @@
                     screen.classList.add('shutdown');
                     mood.light = 0.04;
                     mood.doorClose = 0.62;
+                    mood.doorAngle = 45;
                     setSound(0.003, 34, 0.001, 50);
                 }, 900);
             } else if (type === 'machine') {
@@ -734,11 +876,14 @@
                 mood.fanOpacity = 0.9;
                 mood.grain = 0.25;
                 mood.doorClose = 0.22;
+                mood.doorAngle = 24;
+                mood.aberration = 6;
                 shake += 1.9;
                 screen.classList.add('flicker');
                 setSound(0.02, 52, 0.013, 200);
                 setTimeout(() => {
                     mood.doorClose = 0;
+                    mood.doorAngle = 0;
                     mood.light = 0.86;
                 }, 520);
             } else {
@@ -748,6 +893,8 @@
                 mood.fanOpacity = 0.76;
                 mood.grain = 0.24;
                 mood.doorClose = 0.07;
+                mood.doorAngle = 8;
+                mood.aberration = 3;
                 shake += 0.7;
                 screen.classList.add('shiver');
                 setSound(0.017, 58, 0.008, 150);
@@ -761,6 +908,8 @@
                 mood.fanOpacity = 0.75;
                 mood.grain = 0.22;
                 mood.doorClose = 0;
+                mood.doorAngle = 0;
+                mood.aberration = 0;
                 setSound(0.013, 56, 0.006, 120);
             }, 2400 + Math.random() * 1700);
         }
@@ -769,24 +918,65 @@
             const dt = Math.min(40, time - last);
             last = time;
 
-            baseYaw += (Math.sin(time * 0.00085) * 0.45 - baseYaw) * 0.025;
-            basePitch += (Math.cos(time * 0.00115) * 0.34 - basePitch) * 0.025;
+            const frame = dt / 16.67;
+            const speed = keys.has('ShiftLeft') || keys.has('ShiftRight') ? 2.8 : 1.6;
+
+            let moveX = 0;
+            let moveZ = 0;
+            let moveY = 0;
+
+            if (keys.has('KeyW') || keys.has('ArrowUp')) moveZ += 1;
+            if (keys.has('KeyS') || keys.has('ArrowDown')) moveZ -= 1;
+            if (keys.has('KeyA') || keys.has('ArrowLeft')) moveX -= 1;
+            if (keys.has('KeyD') || keys.has('ArrowRight')) moveX += 1;
+            if (keys.has('KeyE')) moveY += 1;
+            if (keys.has('KeyQ')) moveY -= 1;
+
+            const yawRad = yaw * (Math.PI / 180);
+            const forwardX = Math.sin(yawRad);
+            const forwardZ = Math.cos(yawRad);
+            const strafeX = Math.cos(yawRad);
+            const strafeZ = -Math.sin(yawRad);
+
+            velX += (forwardX * moveZ + strafeX * moveX) * 0.12 * speed;
+            velZ += (forwardZ * moveZ + strafeZ * moveX) * 0.12 * speed;
+            velY += moveY * 0.09 * speed;
+
+            velX *= 0.82;
+            velY *= 0.8;
+            velZ *= 0.82;
+
+            walkX = clamp(walkX + velX * frame, -130, 130);
+            walkY = clamp(walkY + velY * frame, -68, 72);
+            walkZ = clamp(walkZ + velZ * frame, -45, 220);
 
             shake *= 0.93;
             rumble = Math.max(0, rumble * 0.96 - 0.0025);
 
-            const jitterX = (Math.sin(time * 0.028) + Math.cos(time * 0.017)) * 0.2;
-            const jitterY = (Math.cos(time * 0.025) + Math.sin(time * 0.019)) * 0.17;
+            const moving = Math.abs(velX) + Math.abs(velZ);
+            const headBob = Math.sin(time * (0.008 + moving * 0.006)) * (0.7 + moving * 1.7);
+            const jitterX = (Math.sin(time * 0.028) + Math.cos(time * 0.017)) * (0.12 + moving * 0.35);
+            const jitterY = (Math.cos(time * 0.025) + Math.sin(time * 0.019)) * (0.1 + moving * 0.24);
             const impulseX = (Math.random() - 0.5) * shake * 0.18;
             const impulseY = (Math.random() - 0.5) * shake * 0.13;
 
-            const yaw = baseYaw + mouseX * 3.6 + jitterX + impulseX;
-            const pitch = 7 + basePitch + mouseY * 2.4 + jitterY + impulseY;
-            const z = mood.camZ + Math.sin(time * 0.0019) * 7 - rumble * 14;
+            lookPulseX += (mouseX * 0.06 - lookPulseX) * 0.18;
+            lookPulseY += (mouseY * 0.04 - lookPulseY) * 0.16;
 
-            root.style.setProperty('--cam-y', `${yaw}deg`);
-            root.style.setProperty('--cam-x', `${pitch}deg`);
-            root.style.setProperty('--cam-z', `${z.toFixed(1)}px`);
+            const autoYaw = Math.sin(time * 0.0006) * 0.25;
+            const autoPitch = Math.cos(time * 0.0009) * 0.2;
+
+            const camYaw = yaw + autoYaw + lookPulseX + jitterX + impulseX;
+            const camPitch = clamp(pitch + autoPitch + lookPulseY + jitterY + impulseY, -4, 20);
+            const camZ = mood.camZ + walkZ + Math.sin(time * 0.0019) * 6 - rumble * 14;
+            const offX = -walkX + Math.sin(time * 0.011) * 1.2;
+            const offY = -walkY + headBob - rumble * 6;
+
+            root.style.setProperty('--cam-y', `${camYaw.toFixed(3)}deg`);
+            root.style.setProperty('--cam-x', `${camPitch.toFixed(3)}deg`);
+            root.style.setProperty('--cam-z', `${camZ.toFixed(2)}px`);
+            root.style.setProperty('--cam-off-x', `${offX.toFixed(2)}px`);
+            root.style.setProperty('--cam-off-y', `${offY.toFixed(2)}px`);
 
             root.style.setProperty('--light-opacity', mood.light.toFixed(3));
             root.style.setProperty('--light-hue', `${mood.hue}deg`);
@@ -794,14 +984,45 @@
             root.style.setProperty('--fan-opacity', mood.fanOpacity.toFixed(3));
             root.style.setProperty('--grain-opacity', mood.grain.toFixed(3));
             root.style.setProperty('--door-close', mood.doorClose.toFixed(3));
+            root.style.setProperty('--door-angle', `${mood.doorAngle.toFixed(2)}deg`);
+            root.style.setProperty('--aberration', `${mood.aberration.toFixed(2)}px`);
 
             requestAnimationFrame(tick);
         }
 
         window.addEventListener('mousemove', (event) => {
-            mouseX = (event.clientX / window.innerWidth - 0.5) * 2;
-            mouseY = (event.clientY / window.innerHeight - 0.5) * 2;
+            if (document.pointerLockElement === screen) {
+                yaw += event.movementX * 0.08;
+                pitch = clamp(pitch - event.movementY * 0.06, -6, 22);
+                mouseX = 0;
+                mouseY = 0;
+            } else {
+                mouseX = (event.clientX / window.innerWidth - 0.5) * 2;
+                mouseY = (event.clientY / window.innerHeight - 0.5) * 2;
+            }
         });
+
+        window.addEventListener('keydown', (event) => {
+            keys.add(event.code);
+            if (event.code === 'Space') {
+                shake += 0.6;
+                event.preventDefault();
+            }
+        });
+
+        window.addEventListener('keyup', (event) => {
+            keys.delete(event.code);
+        });
+
+        screen.addEventListener('click', () => {
+            if (document.activeElement !== askInput && document.pointerLockElement !== screen) {
+                screen.requestPointerLock();
+            }
+        });
+
+        window.addEventListener('wheel', (event) => {
+            walkZ = clamp(walkZ + (-event.deltaY * 0.08), -45, 220);
+        }, { passive: true });
 
         askForm.addEventListener('submit', (event) => {
             event.preventDefault();
@@ -810,6 +1031,13 @@
             if (!audioReady) bootAudio();
             react(choose(text));
             askInput.value = '';
+            askInput.blur();
+        });
+
+        askInput.addEventListener('focus', () => {
+            if (document.pointerLockElement === screen) {
+                document.exitPointerLock();
+            }
         });
 
         window.addEventListener('pointerdown', () => {
