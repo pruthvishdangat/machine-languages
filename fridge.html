@@ -20,6 +20,7 @@
             --cam-off-x: 0px;
             --cam-off-y: 0px;
             --aberration: 0px;
+            --depth-scale: 1;
         }
 
         * {
@@ -40,12 +41,13 @@
         .screen {
             position: fixed;
             inset: 0;
-            perspective: 1300px;
+            perspective: 600px;
             overflow: hidden;
             background:
                 radial-gradient(circle at 50% 0%, rgba(185, 223, 245, 0.18), transparent 30%),
                 radial-gradient(circle at 50% 110%, rgba(0, 0, 0, 0.6), transparent 40%),
                 #050a10;
+            backdrop-filter: blur(0.02px);
         }
 
         .camera {
@@ -63,7 +65,7 @@
             width: min(134vw, 1760px);
             aspect-ratio: 1.04;
             transform-style: preserve-3d;
-            transform: translate3d(-50%, -50%, -310px);
+            transform: translate3d(-50%, -50%, -310px) scale(var(--depth-scale));
             filter: saturate(0.86) contrast(1.14);
         }
 
@@ -97,6 +99,11 @@
             background:
                 radial-gradient(circle at 50% 22%, hsla(var(--light-hue), 82%, 90%, calc(var(--light-opacity) * 0.45)), transparent 37%),
                 linear-gradient(180deg, #f5f8fa 0%, #dce4ea 56%, #c2cfd9 100%);
+            box-shadow: 
+                inset 0 0 120px rgba(0, 0, 0, 0.25),
+                inset 45px 0 80px rgba(0, 0, 0, 0.12),
+                inset -45px 0 80px rgba(0, 0, 0, 0.12);
+            filter: blur(1.5px);
         }
 
         .back::after {
@@ -111,7 +118,7 @@
 
         .left,
         .right {
-            width: 12%;
+            width: 16%;
             height: 86%;
             top: 7%;
             border-radius: 24px;
@@ -120,19 +127,21 @@
         .left {
             left: 9.5%;
             transform-origin: left center;
-            transform: rotateY(89deg) translateZ(2px);
+            transform: rotateY(82deg) translateZ(6px);
+            box-shadow: inset 18px 0 45px rgba(0, 0, 0, 0.35), inset -2px 0 20px rgba(255, 255, 255, 0.1);
         }
 
         .right {
             right: 9.5%;
             transform-origin: right center;
-            transform: rotateY(-89deg) translateZ(2px);
+            transform: rotateY(-82deg) translateZ(6px);
+            box-shadow: inset -18px 0 45px rgba(0, 0, 0, 0.35), inset 2px 0 20px rgba(255, 255, 255, 0.08);
         }
 
         .ceiling,
         .floor {
             width: 81%;
-            height: 11%;
+            height: 14%;
             left: 9.5%;
             border-radius: 24px;
         }
@@ -140,13 +149,15 @@
         .ceiling {
             top: 7%;
             transform-origin: center top;
-            transform: rotateX(-89deg);
+            transform: rotateX(-78deg) translateZ(8px);
+            box-shadow: inset 0 -28px 50px rgba(0, 0, 0, 0.3), inset 0 2px 15px rgba(255, 255, 255, 0.08);
         }
 
         .floor {
             bottom: 7%;
             transform-origin: center bottom;
-            transform: rotateX(89deg);
+            transform: rotateX(78deg) translateZ(8px);
+            box-shadow: inset 0 28px 50px rgba(0, 0, 0, 0.4), inset 0 -2px 15px rgba(255, 255, 255, 0.05);
         }
 
         .gasket {
@@ -211,6 +222,7 @@
                 0 8px 20px rgba(25, 45, 61, 0.35),
                 inset 0 -8px 10px rgba(96, 127, 148, 0.2);
             overflow: hidden;
+            filter: blur(0.4px);
         }
 
         .shelf::after {
@@ -540,6 +552,24 @@
             background: radial-gradient(circle at 50% 52%, transparent 46%, rgba(0, 0, 0, 0.72) 100%);
         }
 
+        .depth-field {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(0deg, rgba(2, 7, 13, 0.08) 0%, transparent 24%, transparent 76%, rgba(2, 7, 13, 0.04) 100%);
+            mix-blend-mode: multiply;
+            opacity: 0.6;
+        }
+
+        .distance-haze {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center 30%, transparent 0%, rgba(10, 20, 28, 0.18) 100%);
+            mix-blend-mode: overlay;
+            opacity: 0.5;
+        }
+
         .door-shadow {
             position: absolute;
             inset: 0;
@@ -814,6 +844,8 @@
         </div>
         <div class="door-shadow" id="doorShadow"></div>
         <div class="vignette"></div>
+        <div class="depth-field"></div>
+        <div class="distance-haze"></div>
     </div>
 
     <form class="input-shell" id="askForm" aria-label="fridge-input">
@@ -1290,14 +1322,18 @@
             const camYaw = yaw + autoYaw + lookPulseX + jitterX + impulseX;
             const camPitch = clamp(pitch + autoPitch + lookPulseY + jitterY + impulseY, -4, 20);
             const camZ = mood.camZ + walkZ + Math.sin(time * 0.0019) * 6 - rumble * 14;
-            const offX = -walkX + Math.sin(time * 0.011) * 1.2;
-            const offY = -walkY + headBob - rumble * 6;
+            const offX = -walkX + Math.sin(time * 0.011) * 1.2 + (walkZ / 600) * 12;
+            const offY = -walkY + headBob - rumble * 6 + (walkZ / 700) * 8;
+
+            // Parallax depth scaling for motion effect
+            const depthScale = 1.0 + (walkZ / 1800) * 0.14;
 
             root.style.setProperty('--cam-y', `${camYaw.toFixed(3)}deg`);
             root.style.setProperty('--cam-x', `${camPitch.toFixed(3)}deg`);
             root.style.setProperty('--cam-z', `${camZ.toFixed(2)}px`);
             root.style.setProperty('--cam-off-x', `${offX.toFixed(2)}px`);
             root.style.setProperty('--cam-off-y', `${offY.toFixed(2)}px`);
+            root.style.setProperty('--depth-scale', depthScale.toFixed(4));
 
             root.style.setProperty('--light-opacity', mood.light.toFixed(3));
             root.style.setProperty('--light-hue', `${mood.hue}deg`);
