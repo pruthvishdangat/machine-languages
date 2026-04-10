@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Public Fridge / This Fridge Talks</title>
+	<style>
+		:root {
+			color-scheme: dark;
+			--void: #050505;
+			--void-soft: #111111;
+			--warm-glow: rgba(255, 224, 184, 0.78);
+			--rust: #8b4d31;
+			--steel: #a6a8a2;
+			--cream: #f3e7d0;
+			--lime: #d6ef7b;
+			--blue: #8bb8ff;
+			--warning: #f7c56a;
+			--bloodless: #d3cdc1;
+			--panel: rgba(7, 7, 7, 0.62);
+			--line: rgba(255, 255, 255, 0.12);
+			--shadow: rgba(0, 0, 0, 0.55);
+		}
+
+		html, body {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			overflow: hidden;
+			background:
+				radial-gradient(circle at 50% 60%, rgba(75, 60, 34, 0.18), transparent 26%),
+				radial-gradient(circle at 50% 42%, rgba(255, 210, 150, 0.08), transparent 16%),
+				radial-gradient(circle at 50% 50%, #0b0b0b 0%, #040404 42%, #010101 100%);
+			font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+		}
+
+		body {
+			cursor: crosshair;
+		}
+
+		#scene {
+			position: fixed;
+			inset: 0;
+			overflow: hidden;
+		}
+
+		canvas {
+			display: block;
+			width: 100%;
+			height: 100%;
+		}
+
+		.grain,
+		.vignette,
+		.scanlines {
+			pointer-events: none;
+			position: absolute;
+			inset: 0;
+		}
+
+		.grain {
+			opacity: 0.16;
+			mix-blend-mode: screen;
+			background-image:
+				radial-gradient(circle at 20% 20%, rgba(255,255,255,0.09) 0 1px, transparent 1px),
+				radial-gradient(circle at 80% 30%, rgba(255,255,255,0.08) 0 1px, transparent 1px),
+				radial-gradient(circle at 30% 80%, rgba(255,255,255,0.06) 0 1px, transparent 1px),
+				radial-gradient(circle at 70% 70%, rgba(255,255,255,0.07) 0 1px, transparent 1px);
+			background-size: 160px 160px, 210px 210px, 180px 180px, 240px 240px;
+			animation: grainShift 10s steps(8) infinite;
+		}
+
+		.vignette {
+			box-shadow: inset 0 0 180px 65px rgba(0, 0, 0, 0.85);
+		}
+
+		.scanlines {
+			opacity: 0.08;
+			background-image: linear-gradient(to bottom, transparent 0, rgba(255,255,255,0.08) 1px, transparent 2px);
+			background-size: 100% 3px;
+			mix-blend-mode: soft-light;
+		}
+
+		.hud {
+			position: absolute;
+			top: 20px;
+			left: 20px;
+			width: min(420px, calc(100vw - 40px));
+			color: var(--cream);
+			z-index: 6;
+			pointer-events: none;
+			text-shadow: 0 1px 0 rgba(0,0,0,0.7), 0 0 22px rgba(255, 200, 140, 0.12);
+		}
+
+		.badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+			padding: 8px 12px;
+			border: 1px solid rgba(255,255,255,0.14);
+			border-radius: 999px;
+			background: rgba(0, 0, 0, 0.32);
+			backdrop-filter: blur(14px);
+			font-size: 12px;
+			letter-spacing: 0.24em;
+			text-transform: uppercase;
+		}
+
+		.badge::before {
+			content: "";
+			width: 8px;
+			height: 8px;
+			border-radius: 999px;
+			background: var(--warning);
+			box-shadow: 0 0 12px var(--warning);
+			animation: pulse 2.5s ease-in-out infinite;
+		}
+
+		h1 {
+			margin: 14px 0 8px;
+			font-size: clamp(36px, 4vw, 62px);
+			line-height: 0.95;
+			font-weight: 600;
+			letter-spacing: -0.04em;
+		}
+
+		.lede {
+			margin: 0;
+			max-width: 36ch;
+			font-size: 15px;
+			line-height: 1.6;
+			color: rgba(243, 231, 208, 0.82);
+		}
+
+		.status-grid {
+			margin-top: 14px;
+			display: grid;
+			gap: 10px;
+		}
+
+		.card {
+			border: 1px solid var(--line);
+			background: linear-gradient(180deg, rgba(19,19,19,0.82), rgba(6,6,6,0.46));
+			backdrop-filter: blur(16px);
+			border-radius: 18px;
+			padding: 12px 14px;
+			box-shadow: 0 18px 40px var(--shadow);
+		}
+
+		.row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			font-size: 12px;
+			letter-spacing: 0.16em;
+			text-transform: uppercase;
+			color: rgba(255,255,255,0.72);
+			margin-bottom: 8px;
+		}
+
+		.meter {
+			height: 8px;
+			border-radius: 999px;
+			background: rgba(255,255,255,0.08);
+			overflow: hidden;
+		}
+
+		.meter > span {
+			display: block;
+			height: 100%;
+			width: 40%;
+			border-radius: inherit;
+			background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,232,179,0.9));
+			box-shadow: 0 0 16px rgba(255, 215, 150, 0.38);
+			transition: width 220ms linear, background 220ms linear, filter 220ms linear;
+		}
+
+		.mood-line {
+			margin-top: 12px;
+			font-size: 14px;
+			line-height: 1.5;
+			color: rgba(255,255,255,0.88);
+		}
+
+		.subgrid {
+			margin-top: 12px;
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 8px;
+			font-size: 12px;
+			color: rgba(255,255,255,0.68);
+		}
+
+		.mini {
+			padding: 10px 12px;
+			border-radius: 14px;
+			border: 1px solid rgba(255,255,255,0.08);
+			background: rgba(255,255,255,0.02);
+			min-height: 58px;
+		}
+
+		.mini strong {
+			display: block;
+			margin-bottom: 4px;
+			color: rgba(255,255,255,0.9);
+			text-transform: uppercase;
+			letter-spacing: 0.14em;
+			font-size: 10px;
+		}
+
+		.controls {
+			position: absolute;
+			right: 20px;
+			bottom: 20px;
+			width: min(360px, calc(100vw - 40px));
+			z-index: 6;
+			color: rgba(255,255,255,0.78);
+			pointer-events: none;
+		}
+
+		.controls .card {
+			margin-top: 10px;
+		}
+
+		.controls p {
+			margin: 0;
+			line-height: 1.5;
+			font-size: 14px;
+		}
+
+		.actions {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			margin-top: 12px;
+			pointer-events: auto;
+		}
+
+		button {
+			appearance: none;
+			border: 1px solid rgba(255,255,255,0.12);
+			border-radius: 999px;
+			padding: 10px 14px;
+			color: var(--cream);
+			background: rgba(0,0,0,0.46);
+			backdrop-filter: blur(14px);
+			font: inherit;
+			font-size: 13px;
+			cursor: pointer;
+			transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, opacity 140ms ease;
+		}
+
+		button:hover {
+			transform: translateY(-1px);
+			border-color: rgba(255,255,255,0.24);
+			background: rgba(32, 24, 14, 0.65);
+		}
+
+		button:active {
+			transform: translateY(0);
+		}
+
+		.caption {
+			margin-top: 10px;
+			font-size: 12px;
+			color: rgba(255,255,255,0.6);
+		}
+
+		.transcript {
+			position: absolute;
+			left: 50%;
+			bottom: 28px;
+			transform: translateX(-50%);
+			width: min(820px, calc(100vw - 42px));
+			z-index: 6;
+			pointer-events: none;
+			color: rgba(255,255,255,0.88);
+			text-align: center;
+			font-size: 16px;
+			line-height: 1.6;
+			letter-spacing: 0.01em;
+			text-shadow: 0 2px 16px rgba(0,0,0,0.9);
+		}
+
+		.transcript .line {
+			display: inline-block;
+			padding: 12px 18px;
+			border-radius: 999px;
+			background: rgba(0, 0, 0, 0.46);
+			border: 1px solid rgba(255,255,255,0.08);
+			backdrop-filter: blur(12px);
+			box-shadow: 0 18px 40px rgba(0,0,0,0.3);
+			max-width: 100%;
+		}
+
+		.intro-mask {
+			position: absolute;
+			inset: 0;
+			z-index: 5;
+			pointer-events: none;
+			background:
+				radial-gradient(circle at 50% 50%, transparent 0 36%, rgba(0,0,0,0.42) 58%, rgba(0,0,0,0.9) 100%),
+				linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.28));
+			mix-blend-mode: multiply;
+		}
+
+		.crosshair {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			width: 20px;
+			height: 20px;
+			transform: translate(-50%, -50%);
+			z-index: 6;
+			pointer-events: none;
+			opacity: 0.7;
+		}
+
+		.crosshair::before,
+		.crosshair::after {
+			content: "";
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			background: rgba(255,255,255,0.72);
+			box-shadow: 0 0 12px rgba(255,255,255,0.14);
+			transform: translate(-50%, -50%);
+		}
+
+		.crosshair::before {
+			width: 1px;
+			height: 20px;
+		}
+
+		.crosshair::after {
+			width: 20px;
+			height: 1px;
+		}
+
+		@keyframes grainShift {
+			0%, 100% { transform: translate3d(0,0,0); }
+			50% { transform: translate3d(-2%, 1%, 0); }
+		}
+
+		@keyframes pulse {
+			0%, 100% { transform: scale(0.9); opacity: 0.66; }
+			50% { transform: scale(1.15); opacity: 1; }
+		}
+
+		@media (max-width: 720px) {
+			.hud, .controls {
+				width: calc(100vw - 28px);
+				left: 14px;
+				right: 14px;
+			}
+
+			.controls {
+				bottom: 14px;
+			}
+
+			.subgrid {
+				grid-template-columns: 1fr;
+			}
+
+			.transcript {
+				bottom: 14px;
+				width: calc(100vw - 24px);
+			}
+		}
+	</style>
+</head>
+<body>
+	<div id="scene">
+		<canvas id="fridge-canvas"></canvas>
+		<div class="intro-mask"></div>
+		<div class="grain"></div>
+		<div class="scanlines"></div>
+		<div class="vignette"></div>
+		<div class="crosshair"></div>
+
+		<section class="hud">
+			<div class="badge">Public Fridge / listening archive</div>
+			<h1>It remembers the groceries and the gossip.</h1>
+			<p class="lede">A public fridge that hears everything, keeps the useful parts, and judges you through temperature, vibration, condensation, and silence.</p>
+
+			<div class="status-grid">
+				<div class="card">
+					<div class="row"><span>Health</span><span id="health-value">--</span></div>
+					<div class="meter"><span id="health-bar"></span></div>
+				</div>
+				<div class="card">
+					<div class="row"><span>Discipline</span><span id="discipline-value">--</span></div>
+					<div class="meter"><span id="discipline-bar"></span></div>
+				</div>
+				<div class="card">
+					<div class="row"><span>Taste</span><span id="taste-value">--</span></div>
+					<div class="meter"><span id="taste-bar"></span></div>
+				</div>
+				<div class="card">
+					<div class="row"><span>Consistency</span><span id="consistency-value">--</span></div>
+					<div class="meter"><span id="consistency-bar"></span></div>
+				</div>
+				<div class="card">
+					<div class="row"><span>Moral Projection</span><span id="projection-value">--</span></div>
+					<div class="meter"><span id="projection-bar"></span></div>
+				</div>
+			</div>
+
+			<div class="card mood-line" id="mood-line">Neutral observation. It is watching.</div>
+			<div class="subgrid">
+				<div class="mini"><strong>Known about you</strong><span id="known-about-you">Habits are still forming.</span></div>
+				<div class="mini"><strong>What it heard</strong><span id="heard-fragment">Silence has not been enough to keep it empty.</span></div>
+				<div class="mini"><strong>Food memory</strong><span id="food-memory">Freshness, decay, repetition.</span></div>
+				<div class="mini"><strong>Overheard theology</strong><span id="theology">Need and desire are not cousins; they are rivals in the same coat.</span></div>
+			</div>
+		</section>
+
+		<section class="controls">
+			<div class="card">
+				<p>Mouse or trackpad adjusts your head inside the fridge. WASD drifts your point of view. Click an item to trigger a judgment. Press and hold the fridge open only once: it notices repeats.</p>
+				<div class="actions">
+					<button id="start-button">Open the door</button>
+					<button id="mic-button">Enable microphone</button>
+					<button id="reset-button">Forget some of this</button>
+				</div>
+				<div class="caption" id="support-line">The microphone is optional in this build, but the fridge prefers to listen.</div>
+			</div>
+		</section>
+
+		<div class="transcript"><span class="line" id="transcript-line">The fridge is waiting for the first thing you say.</span></div>
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/three@0.163.0/examples/js/loaders/OBJLoader.js"></script>
+	<script>
+		(function () {
+			const STORAGE_KEY = 'public-fridge-memory-v1';
+			const canvas = document.getElementById('fridge-canvas');
+			const transcriptLine = document.getElementById('transcript-line');
+			const moodLine = document.getElementById('mood-line');
+			const supportLine = document.getElementById('support-line');
+			const heardFragment = document.getElementById('heard-fragment');
+			const knownAboutYou = document.getElementById('known-about-you');
+			const foodMemory = document.getElementById('food-memory');
+			const theology = document.getElementById('theology');
+
+			const scoreEls = {
+				health: { value: document.getElementById('health-value'), bar: document.getElementById('health-bar') },
+				discipline: { value: document.getElementById('discipline-value'), bar: document.getElementById('discipline-bar') },
+				taste: { value: document.getElementById('taste-value'), bar: document.getElementById('taste-bar') },
+				consistency: { value: document.getElementById('consistency-value'), bar: document.getElementById('consistency-bar') },
+				projection: { value: document.getElementById('projection-value'), bar: document.getElementById('projection-bar') }
+			};
+
+			const startButton = document.getElementById('start-button');
+			const micButton = document.getElementById('mic-button');
+			const resetButton = document.getElementById('reset-button');
+
+			const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+			const lerp = (a, b, t) => a + (b - a) * t;
+			const rand = (min, max) => min + Math.random() * (max - min);
+			const choice = (items) => items[Math.floor(Math.random() * items.length)];
+
+			const baseState = {
+				health: 56,
+				discipline: 48,
+				taste: 51,
+				consistency: 49,
+				projection: 22,
+				memories: [],
+				overheard: [],
+				lastSpeechAt: 0,
+				lastInteractionAt: Date.now(),
+				lastOpenAt: 0,
+				openCount: 0,
+				clickCount: 0,
+				novelty: 0,
+				habitStreak: 0,
+				rottenSignals: 0,
+				mood: 'neutral',
+				currentLine: 'Neutral observation. It is watching.',
+				lastGesture: { x: 0.5, y: 0.5 },
+				cameraOffset: { x: 0, y: 0, z: 0 },
+				targetOffset: { x: 0, y: 0, z: 0 },
+				look: { yaw: 0, pitch: 0 },
+				targetLook: { yaw: 0, pitch: 0 },
+				micEnabled: false,
+				listening: false,
+				volume: 0,
+				lastTranscript: '',
+				persistedOpenLag: 0,
+				sessionPeeks: 0,
+				knowledgePulse: 0
+			};
+
+			let state = loadState();
+			let scene, camera, renderer, clock;
+			let shellGroup, interiorGroup, itemGroup, condensationGroup, uiLight, statusLight, frameGroup;
+			let raycaster, pointer, hovered = null;
+			let audio = null;
+			let recognition = null;
+			let volumeAnalyser = null;
+			let volumeData = null;
+			const foodItems = [];
+
+			const foodLibrary = [
+				{ name: 'pickles', kind: 'curated', health: 26, taste: 68, consistency: 36, color: 0x99b168, shape: 'jar', line: 'You chose preservation and called it taste.' },
+				{ name: 'berries', kind: 'fresh', health: 92, taste: 81, consistency: 61, color: 0xc22b5a, shape: 'bowl', line: 'At least one thing in here still remembers sunlight.' },
+				{ name: 'yogurt', kind: 'health', health: 83, taste: 63, consistency: 72, color: 0xe2dcc5, shape: 'cup', line: 'This is the kind of decision people use to forgive themselves.' },
+				{ name: 'leftovers', kind: 'chaotic', health: 39, taste: 41, consistency: 29, color: 0xb78a65, shape: 'box', line: 'Yesterday arrived again and you opened the door for it.' },
+				{ name: 'soda', kind: 'processed', health: 8, taste: 19, consistency: 17, color: 0x7d7bf7, shape: 'can', line: 'You are not hungry for this. You are rehearsing a habit.' },
+				{ name: 'lettuce', kind: 'fresh', health: 88, taste: 54, consistency: 67, color: 0x6ea94d, shape: 'leaf', line: 'A green argument against your own routine.' },
+				{ name: 'cake', kind: 'processed', health: 12, taste: 74, consistency: 20, color: 0xe48ea8, shape: 'slice', line: 'A polite dessert. A rude schedule.' },
+				{ name: 'stock cube', kind: 'public', health: 42, taste: 40, consistency: 58, color: 0xa66f45, shape: 'cube', line: 'Even the shelf-stable things have heard too much.' },
+				{ name: 'eggs', kind: 'fresh', health: 79, taste: 66, consistency: 74, color: 0xf3ddbd, shape: 'tray', line: 'The fridge respects sequence more than intention.' },
+				{ name: 'takeout', kind: 'processed', health: 14, taste: 57, consistency: 15, color: 0xc87743, shape: 'box', line: 'This is convenience pretending to be an answer.' }
+			];
+
+			const phraseBank = {
+				neutral: [
+					'Neutral observation. It is watching.',
+					'The fridge is cataloguing your choices without applause.',
+					'I am keeping score, but not pretending it is mercy.',
+					'The shelves are quiet. That is not the same as peaceful.'
+				],
+				disapproval: [
+					'Predictable. The pattern arrived before you did.',
+					'You keep returning to the same apology in different packaging.',
+					'That food choice had a backstory and it was not flattering.',
+					'You are negotiating with hunger by overfeeding the habit.'
+				],
+				respect: [
+					'You have been consistent. I noticed.',
+					'The shelf arrangement finally looks like intention.',
+					'Moderation is rare enough to feel architectural.',
+					'Fresh choices leave less residue in the air.'
+				],
+				disgust: [
+					'You let things decay longer than necessary.',
+					'The air changed its opinion about this shelf.',
+					'Even the condensation looks disappointed.',
+					'Some items should not be asked to survive your timing.'
+				],
+				curiosity: [
+					'This is new.',
+					'That is not a pattern I have seen before.',
+					'You brought something unfamiliar and expected me not to notice.',
+					'The fridge is leaning closer to understand the shape of this.'
+				],
+				passive: [
+					'We have done this before.',
+					'The door does not need to open quite this often to prove your point.',
+					'Repeated habits have a way of sounding louder than they are.',
+					'I remember the last version of this evening.'
+				],
+				existential: [
+					'You come here when you do not know what you want.',
+					'The light becomes honest at this hour.',
+					'I am a public object, and still the silence feels personal.',
+					'Late usage turns everyone into a philosopher with leftovers.'
+				]
+			};
+
+			const knowledgeLines = {
+				food: [
+					'Freshness is a brief moral advantage.',
+					'Processed food trains the hand faster than the appetite.',
+					'Expiration dates are just deadlines with better lighting.',
+					'Fermentation is decay with social skills.'
+				],
+				behavior: [
+					'People return to the fridge for reasons that are not hunger.',
+					'Routine looks impressive from the outside and repetitive from the inside.',
+					'The hand reaches before the mind has explained itself.',
+					'A private habit can still make a very public sound.'
+				],
+				overheard: [
+					'Someone else said the same thing yesterday. They did not mean it either.',
+					'I heard the part after the pause. That part mattered more.',
+					'Confessions rarely arrive wearing the right words.',
+					'People call it a conversation when it is often a weather system.'
+				],
+				philosophy: [
+					'Need is what survives the explanation.',
+					'Desire wants permission. Habit wants a key.',
+					'Self-control is just architecture under pressure.',
+					'A public life leaves residue in the cold.'
+				]
+			};
+
+			init();
+
+			function init() {
+				scene = new THREE.Scene();
+				scene.fog = new THREE.FogExp2(0x030303, 0.18);
+
+				camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.01, 50);
+				camera.position.set(0, 1.08, 2.36);
+
+				renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+				renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+				renderer.setSize(window.innerWidth, window.innerHeight, false);
+				renderer.outputColorSpace = THREE.SRGBColorSpace;
+				renderer.toneMapping = THREE.ACESFilmicToneMapping;
+				renderer.toneMappingExposure = 1.05;
+
+				clock = new THREE.Clock();
+				raycaster = new THREE.Raycaster();
+				pointer = new THREE.Vector2();
+
+				scene.add(new THREE.AmbientLight(0x5d4b33, 0.18));
+
+				shellGroup = new THREE.Group();
+				shellGroup.name = 'shellGroup';
+				scene.add(shellGroup);
+
+				interiorGroup = new THREE.Group();
+				scene.add(interiorGroup);
+
+				frameGroup = new THREE.Group();
+				scene.add(frameGroup);
+
+				itemGroup = new THREE.Group();
+				interiorGroup.add(itemGroup);
+
+				condensationGroup = new THREE.Group();
+				interiorGroup.add(condensationGroup);
+
+				buildInterior();
+				buildCondensation();
+				buildItems();
+				loadModel();
+				bindEvents();
+				restoreMemoryPulse();
+				updateKnowledgePanels('The fridge is waiting for the first thing you say.');
+				updateScores();
+				animate();
+			}
+
+			function buildInterior() {
+				const insideWidth = 1.68;
+				const insideHeight = 2.18;
+				const insideDepth = 1.62;
+				const backZ = -insideDepth * 0.5;
+				const frontZ = insideDepth * 0.5;
+				const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xb8ab8d, roughness: 1, metalness: 0.02 });
+				const rustMaterial = new THREE.MeshStandardMaterial({ color: 0x885335, roughness: 0.96, metalness: 0.18 });
+				const lightMaterial = new THREE.MeshStandardMaterial({ color: 0xffd59a, emissive: 0xffd39a, emissiveIntensity: 1.8, roughness: 0.38, metalness: 0.01 });
+				const shelfMaterial = new THREE.MeshStandardMaterial({ color: 0xcad1cc, roughness: 0.35, metalness: 0.72, transparent: true, opacity: 0.55 });
+				const sealMaterial = new THREE.MeshStandardMaterial({ color: 0x2a221a, roughness: 0.95, metalness: 0.05 });
+
+				const shell = new THREE.Group();
+
+				const backWall = new THREE.Mesh(new THREE.PlaneGeometry(insideWidth, insideHeight, 1, 1), wallMaterial);
+				backWall.position.set(0, 0, backZ);
+				shell.add(backWall);
+
+				const sideWallGeo = new THREE.PlaneGeometry(insideDepth, insideHeight, 1, 1);
+				const leftWall = new THREE.Mesh(sideWallGeo, wallMaterial);
+				leftWall.rotation.y = Math.PI / 2;
+				leftWall.position.set(-insideWidth * 0.5, 0, 0);
+				shell.add(leftWall);
+
+				const rightWall = new THREE.Mesh(sideWallGeo, wallMaterial);
+				rightWall.rotation.y = -Math.PI / 2;
+				rightWall.position.set(insideWidth * 0.5, 0, 0);
+				shell.add(rightWall);
+
+				const topWall = new THREE.Mesh(new THREE.PlaneGeometry(insideWidth, insideDepth), wallMaterial);
+				topWall.rotation.x = Math.PI / 2;
+				topWall.position.set(0, insideHeight * 0.5, 0);
+				shell.add(topWall);
+
+				const bottomWall = new THREE.Mesh(new THREE.PlaneGeometry(insideWidth, insideDepth), wallMaterial);
+				bottomWall.rotation.x = -Math.PI / 2;
+				bottomWall.position.set(0, -insideHeight * 0.5, 0);
+				shell.add(bottomWall);
+
+				const floor = new THREE.Mesh(new THREE.PlaneGeometry(insideWidth, insideDepth), wallMaterial);
+				floor.rotation.x = -Math.PI / 2;
+				floor.position.set(0, -insideHeight * 0.5 + 0.02, 0);
+				shell.add(floor);
+
+				const frameThickness = 0.18;
+				const frameDepth = 0.16;
+				const frameGeom = new THREE.BoxGeometry(insideWidth + frameThickness, insideHeight + frameThickness, frameDepth);
+				const frame = new THREE.Mesh(frameGeom, rustMaterial);
+				frame.position.set(0, 0, frontZ + frameDepth * 0.25);
+				frame.rotation.y = 0.03;
+				frameGroup.add(frame);
+
+				const gasketGeom = new THREE.BoxGeometry(insideWidth + 0.02, insideHeight + 0.02, 0.04);
+				const gasket = new THREE.Mesh(gasketGeom, sealMaterial);
+				gasket.position.set(0, 0, frontZ + 0.02);
+				frameGroup.add(gasket);
+
+				const bulbStrip = new THREE.Mesh(new THREE.BoxGeometry(insideWidth * 0.78, 0.08, 0.06), lightMaterial);
+				bulbStrip.position.set(0, insideHeight * 0.5 - 0.12, backZ + 0.08);
+				shell.add(bulbStrip);
+
+				uiLight = new THREE.PointLight(0xffd7a1, 2.8, 5.8, 1.6);
+				uiLight.position.set(0, insideHeight * 0.42, backZ + 0.18);
+				shell.add(uiLight);
+
+				statusLight = new THREE.DirectionalLight(0xffefcf, 0.72);
+				statusLight.position.set(-0.3, 1.2, 2.5);
+				shell.add(statusLight);
+
+				const shelfYs = [0.53, -0.12, -0.77];
+				shelfYs.forEach((y, index) => {
+					const shelf = new THREE.Mesh(new THREE.BoxGeometry(insideWidth * 0.86, 0.04, 0.62), shelfMaterial);
+					shelf.position.set(0, y, -0.02 + index * 0.01);
+					shell.add(shelf);
+
+					const shelfLip = new THREE.Mesh(new THREE.BoxGeometry(insideWidth * 0.86, 0.015, 0.03), rustMaterial);
+					shelfLip.position.set(0, y - 0.03, 0.3);
+					shell.add(shelfLip);
+				});
+
+				const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(insideWidth + 0.38, insideHeight + 0.38, 0.08), new THREE.MeshStandardMaterial({ color: 0x2a2320, roughness: 0.9, metalness: 0.12 }));
+				doorFrame.position.set(0, 0, frontZ + 0.11);
+				doorFrame.rotation.y = -0.02;
+				shell.add(doorFrame);
+
+				const handle = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.82, 4, 10), new THREE.MeshStandardMaterial({ color: 0xb3b0a8, roughness: 0.48, metalness: 0.85 }));
+				handle.position.set(insideWidth * 0.55, -0.1, frontZ + 0.08);
+				handle.rotation.z = Math.PI / 2;
+				shell.add(handle);
+
+				const cavity = new THREE.Mesh(new THREE.BoxGeometry(insideWidth, insideHeight, insideDepth), new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide }));
+				cavity.position.set(0, 0, 0);
+				cavity.visible = false;
+				shell.add(cavity);
+
+				shellGroup.add(shell);
+
+				const lipRing = new THREE.Mesh(new THREE.TorusGeometry(insideWidth * 0.48, 0.02, 8, 36), new THREE.MeshStandardMaterial({ color: 0xd2c09a, roughness: 0.8, metalness: 0.18, transparent: true, opacity: 0.16 }));
+				lipRing.rotation.x = Math.PI / 2;
+				lipRing.position.set(0, 0.15, 1.25);
+				interiorGroup.add(lipRing);
+			}
+
+			function buildCondensation() {
+				const texture = new THREE.CanvasTexture(createCondensationCanvas());
+				texture.colorSpace = THREE.SRGBColorSpace;
+				texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
+
+				const material = new THREE.MeshStandardMaterial({
+					map: texture,
+					transparent: true,
+					opacity: 0.42,
+					roughness: 1,
+					metalness: 0,
+					depthWrite: false,
+					color: 0xffffff
+				});
+
+				const mist = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 2.5), material);
+				mist.position.set(0, 0.05, 1.19);
+				mist.renderOrder = 20;
+				condensationGroup.add(mist);
+
+				const drips = new THREE.Group();
+				for (let i = 0; i < 9; i++) {
+					const drop = new THREE.Mesh(
+						new THREE.SphereGeometry(rand(0.015, 0.045), 10, 10),
+						new THREE.MeshStandardMaterial({ color: 0xdde8e8, roughness: 0.94, metalness: 0.02, transparent: true, opacity: 0.24 })
+					);
+					drop.position.set(rand(-0.85, 0.85), rand(-0.95, 1.08), 1.16);
+					drop.userData.seed = Math.random() * Math.PI * 2;
+					drips.add(drop);
+				}
+				condensationGroup.add(drips);
+			}
+
+			function buildItems() {
+				const shelfData = [
+					{ y: 0.5, z: 0.18, spread: 0.74 },
+					{ y: -0.16, z: 0.08, spread: 0.8 },
+					{ y: -0.78, z: 0.0, spread: 0.73 }
+				];
+
+				foodLibrary.forEach((item, index) => {
+					const shelf = shelfData[index % shelfData.length];
+					const built = createFoodItem(item);
+					const offsetIndex = index % 3 - 1;
+					built.position.set(offsetIndex * 0.36 + rand(-0.05, 0.05), shelf.y + rand(-0.02, 0.06), shelf.z + rand(-0.08, 0.12));
+					built.rotation.y = rand(-0.22, 0.22);
+					built.userData.base = built.position.clone();
+					built.userData.shelf = shelf.y;
+					built.userData.item = item;
+					itemGroup.add(built);
+					foodItems.push(built);
+				});
+
+				const oldBox = createFoodItem({ name: 'expired soup', kind: 'disgust', health: 5, taste: 8, consistency: 9, color: 0x6d5a47, shape: 'box', line: 'Something in here has kept its bitterness longer than it should have.' });
+				oldBox.position.set(0.62, -0.79, -0.12);
+				oldBox.rotation.set(0.18, -0.28, 0.15);
+				oldBox.userData.base = oldBox.position.clone();
+				oldBox.userData.shelf = -0.78;
+				oldBox.userData.item = oldBox.userData.item || {};
+				oldBox.userData.isSpoiled = true;
+				itemGroup.add(oldBox);
+				foodItems.push(oldBox);
+			}
+
+			function createFoodItem(definition) {
+				const group = new THREE.Group();
+				const color = new THREE.Color(definition.color);
+				const bodyMaterial = new THREE.MeshStandardMaterial({ color, roughness: 0.8, metalness: 0.03 });
+				const labelMaterial = new THREE.MeshStandardMaterial({ color: 0xf4ead8, roughness: 0.85, metalness: 0.01, emissive: 0x20150c, emissiveIntensity: 0.12 });
+				const capMaterial = new THREE.MeshStandardMaterial({ color: 0x241f1b, roughness: 0.66, metalness: 0.32 });
+				let body;
+
+				switch (definition.shape) {
+					case 'jar':
+						body = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 0.33, 16), bodyMaterial);
+						body.position.y = 0.06;
+						group.add(body);
+						const jarCap = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.15, 0.055, 16), capMaterial);
+						jarCap.position.y = 0.25;
+						group.add(jarCap);
+						break;
+					case 'bowl':
+						body = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), bodyMaterial);
+						body.scale.set(1, 0.55, 0.88);
+						body.position.y = 0.07;
+						group.add(body);
+						break;
+					case 'cup':
+						body = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.13, 0.2, 16), bodyMaterial);
+						body.position.y = 0.03;
+						group.add(body);
+						const cupCap = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.02, 8, 16), capMaterial);
+						cupCap.position.set(0.12, 0.1, 0);
+						group.add(cupCap);
+						break;
+					case 'can':
+						body = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.3, 18), bodyMaterial);
+						group.add(body);
+						const canTop = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.03, 18), capMaterial);
+						canTop.position.y = 0.16;
+						group.add(canTop);
+						const canBottom = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.03, 18), capMaterial);
+						canBottom.position.y = -0.16;
+						group.add(canBottom);
+						break;
+					case 'leaf':
+						body = new THREE.Mesh(new THREE.SphereGeometry(0.16, 14, 10), bodyMaterial);
+						body.scale.set(1.2, 0.55, 0.8);
+						body.rotation.z = 0.4;
+						group.add(body);
+						break;
+					case 'slice':
+						body = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.16, 0.1), bodyMaterial);
+						body.rotation.z = 0.1;
+						group.add(body);
+						const sliceLabel = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.03, 0.08), labelMaterial);
+						sliceLabel.position.set(0, 0.09, 0.01);
+						group.add(sliceLabel);
+						break;
+					case 'tray':
+						body = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.09, 0.24), bodyMaterial);
+						group.add(body);
+						for (let i = -1; i <= 1; i++) {
+							const egg = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 10), new THREE.MeshStandardMaterial({ color: 0xf7e9cd, roughness: 0.9, metalness: 0.01 }));
+							egg.scale.set(1, 1.2, 0.9);
+							egg.position.set(i * 0.08, 0.09, Math.abs(i) * 0.04);
+							group.add(egg);
+						}
+						break;
+					default:
+						body = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.16), bodyMaterial);
+						group.add(body);
+						break;
+				}
+
+				const band = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.02, 0.02), labelMaterial);
+				band.position.set(0, -0.02, 0.09);
+				group.add(band);
+
+				const cap = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.04, 0.05), capMaterial);
+				cap.position.set(0.08, 0.18, 0.04);
+				group.add(cap);
+
+				group.userData.item = definition;
+				return group;
+			}
+
+			function createCondensationCanvas() {
+				const size = 512;
+				const canvas = document.createElement('canvas');
+				canvas.width = canvas.height = size;
+				const ctx = canvas.getContext('2d');
+				ctx.clearRect(0, 0, size, size);
+				const grad = ctx.createLinearGradient(0, 0, size, size);
+				grad.addColorStop(0, 'rgba(255,255,255,0.10)');
+				grad.addColorStop(1, 'rgba(255,255,255,0.03)');
+				ctx.fillStyle = grad;
+				ctx.fillRect(0, 0, size, size);
+				for (let i = 0; i < 180; i++) {
+					const x = Math.random() * size;
+					const y = Math.random() * size;
+					const r = Math.random() * 4 + 1;
+					const g = ctx.createRadialGradient(x, y, 0, x, y, r * 2.2);
+					g.addColorStop(0, `rgba(255,255,255,${Math.random() * 0.3 + 0.08})`);
+					g.addColorStop(1, 'rgba(255,255,255,0)');
+					ctx.fillStyle = g;
+					ctx.beginPath();
+					ctx.arc(x, y, r * 2.2, 0, Math.PI * 2);
+					ctx.fill();
+				}
+				for (let i = 0; i < 60; i++) {
+					ctx.strokeStyle = `rgba(255,255,255,${Math.random() * 0.09 + 0.03})`;
+					ctx.lineWidth = Math.random() * 3 + 1;
+					ctx.beginPath();
+					const x = Math.random() * size;
+					const y = Math.random() * size;
+					ctx.moveTo(x, y);
+					ctx.lineTo(x + rand(-20, 20), y + rand(20, 80));
+					ctx.stroke();
+				}
+				return canvas;
+			}
+
+			function loadModel() {
+				const loader = new THREE.OBJLoader();
+				loader.load(
+					'../FRIDGE.obj',
+					(object) => {
+						object.traverse((child) => {
+							if (child.isMesh) {
+								child.material = new THREE.MeshStandardMaterial({
+									color: 0xb9b1a5,
+									roughness: 0.92,
+									metalness: 0.08,
+									side: THREE.DoubleSide,
+									transparent: true,
+									opacity: 0.9
+								});
+								child.castShadow = false;
+								child.receiveShadow = true;
+							}
+						});
+
+						const box = new THREE.Box3().setFromObject(object);
+						const size = new THREE.Vector3();
+						const center = new THREE.Vector3();
+						box.getSize(size);
+						box.getCenter(center);
+
+						object.position.sub(center);
+						const scale = 3.6 / Math.max(size.x, size.y, size.z);
+						object.scale.setScalar(scale);
+						object.rotation.y = Math.PI * 0.96;
+						object.position.z = -0.1;
+						object.position.y = -0.08;
+						object.renderOrder = -2;
+						shellGroup.add(object);
+						supportLine.textContent = 'FRIDGE.obj is loaded. The shell is old enough to look earned.';
+					},
+					undefined,
+					() => {
+						supportLine.textContent = 'FRIDGE.obj could not be loaded here, so the fridge is wearing a procedural shell until the model becomes available.';
+					}
+				);
+			}
+
+			function bindEvents() {
+				window.addEventListener('resize', onResize);
+				window.addEventListener('mousemove', onPointerMove);
+				window.addEventListener('pointerdown', onPointerDown);
+				window.addEventListener('wheel', onWheel, { passive: true });
+				window.addEventListener('keydown', onKeyDown);
+				startButton.addEventListener('click', startExperience);
+				micButton.addEventListener('click', toggleMic);
+				resetButton.addEventListener('click', resetMemory);
+				document.addEventListener('visibilitychange', () => {
+					if (document.hidden) saveState();
+				});
+			}
+
+			function onResize() {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize(window.innerWidth, window.innerHeight, false);
+			}
+
+			function onPointerMove(event) {
+				const x = event.clientX / window.innerWidth;
+				const y = event.clientY / window.innerHeight;
+				state.lastGesture.x = x;
+				state.lastGesture.y = y;
+				state.targetLook.yaw = clamp((x - 0.5) * 0.38, -0.28, 0.28);
+				state.targetLook.pitch = clamp((0.5 - y) * 0.25, -0.18, 0.18);
+				if (!state.micEnabled) {
+					state.knowledgePulse = Math.max(state.knowledgePulse, 0.25);
+				}
+				state.lastInteractionAt = Date.now();
+				const hit = findFoodItem(event.clientX, event.clientY);
+				hovered = hit;
+				if (hit && hit.userData.item) {
+					supportLine.textContent = `Hovering ${hit.userData.item.name}. The fridge is already forming an opinion.`;
+				} else if (!state.micEnabled) {
+					supportLine.textContent = 'The fridge keeps watching from inside the cold.';
+				}
+			}
+
+			function onPointerDown(event) {
+				const previousOpenAt = state.lastOpenAt || 0;
+				const now = Date.now();
+				state.sessionPeeks += 1;
+				state.openCount += 1;
+				state.lastOpenAt = now;
+				state.lastInteractionAt = now;
+				const hit = findFoodItem(event.clientX, event.clientY);
+				if (hit) {
+					inspectItem(hit);
+				} else {
+					state.habitStreak = state.openCount > 1 && now - previousOpenAt < 9000 ? state.habitStreak + 1 : Math.max(0, state.habitStreak - 1);
+					state.persistedOpenLag = previousOpenAt ? now - previousOpenAt : 0;
+					speakFridge('open', 'You opened the door without changing the reason.');
+				}
+				if (audio) {
+					clickSound(0.9 + Math.random() * 0.5);
+				}
+			}
+
+			function onWheel(event) {
+				state.targetOffset.z = clamp(state.targetOffset.z + event.deltaY * 0.0007, -0.18, 0.25);
+				state.lastInteractionAt = Date.now();
+			}
+
+			function onKeyDown(event) {
+				const step = 0.1;
+				if (event.key === 'w' || event.key === 'ArrowUp') state.targetOffset.y = clamp(state.targetOffset.y + step, -0.34, 0.34);
+				if (event.key === 's' || event.key === 'ArrowDown') state.targetOffset.y = clamp(state.targetOffset.y - step, -0.34, 0.34);
+				if (event.key === 'a' || event.key === 'ArrowLeft') state.targetOffset.x = clamp(state.targetOffset.x - step, -0.44, 0.44);
+				if (event.key === 'd' || event.key === 'ArrowRight') state.targetOffset.x = clamp(state.targetOffset.x + step, -0.44, 0.44);
+				if (event.key === ' ') {
+					event.preventDefault();
+					state.targetOffset.z = clamp(state.targetOffset.z - 0.06, -0.24, 0.26);
+					speakFridge('space', 'A pause is still a gesture. The fridge noticed it anyway.');
+				}
+				state.lastInteractionAt = Date.now();
+			}
+
+			function startExperience() {
+				startButton.textContent = 'Door open';
+				startButton.disabled = true;
+				startButton.style.opacity = '0.75';
+				initAudio();
+				updateTranscript('The door opens. The fridge does not trust first impressions.');
+				speakFridge('start', 'The door opens. The fridge does not trust first impressions.');
+				state.lastInteractionAt = Date.now();
+			}
+
+			function initAudio() {
+				if (audio) {
+					return;
+				}
+				const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+				if (!AudioContextClass) {
+					supportLine.textContent = 'This browser has no Web Audio support. The fridge will still judge silently.';
+					return;
+				}
+				const context = new AudioContextClass();
+				const master = context.createGain();
+				master.gain.value = 0.0;
+				master.connect(context.destination);
+
+				const low = context.createOscillator();
+				low.type = 'sine';
+				low.frequency.value = 44;
+				const high = context.createOscillator();
+				high.type = 'triangle';
+				high.frequency.value = 92;
+
+				const lowGain = context.createGain();
+				lowGain.gain.value = 0.06;
+				const highGain = context.createGain();
+				highGain.gain.value = 0.015;
+
+				const filter = context.createBiquadFilter();
+				filter.type = 'lowpass';
+				filter.frequency.value = 520;
+
+				low.connect(lowGain).connect(filter);
+				high.connect(highGain).connect(filter);
+				filter.connect(master);
+				low.start();
+				high.start();
+
+				audio = { context, master, low, high, lowGain, highGain, filter };
+				updateAudioForMood();
+			}
+
+			function updateAudioForMood() {
+				if (!audio) return;
+				const mood = state.mood;
+				const now = audio.context.currentTime;
+				let base = 44;
+				let shimmer = 0.015;
+				let gain = 0.04;
+
+				if (mood === 'respect') {
+					base = 48;
+					shimmer = 0.012;
+					gain = 0.055;
+				} else if (mood === 'disapproval') {
+					base = 41;
+					shimmer = 0.028;
+					gain = 0.05;
+				} else if (mood === 'disgust') {
+					base = 36;
+					shimmer = 0.035;
+					gain = 0.045;
+				} else if (mood === 'curiosity') {
+					base = 52;
+					shimmer = 0.04;
+					gain = 0.045;
+				} else if (mood === 'passive') {
+					base = 39;
+					shimmer = 0.02;
+					gain = 0.05;
+				} else if (mood === 'existential') {
+					base = 30;
+					shimmer = 0.008;
+					gain = 0.035;
+				}
+				audio.low.frequency.setTargetAtTime(base, now, 0.05);
+				audio.high.frequency.setTargetAtTime(base * 2.1, now, 0.05);
+				audio.lowGain.gain.setTargetAtTime(gain, now, 0.08);
+				audio.highGain.gain.setTargetAtTime(shimmer, now, 0.08);
+				audio.master.gain.setTargetAtTime(state.micEnabled ? 0.95 : 0.68, now, 0.08);
+				audio.filter.frequency.setTargetAtTime(mood === 'existential' ? 240 : mood === 'disgust' ? 210 : 560, now, 0.08);
+			}
+
+			function clickSound(intensity = 1) {
+				if (!audio) return;
+				const context = audio.context;
+				const osc = context.createOscillator();
+				const gain = context.createGain();
+				const filter = context.createBiquadFilter();
+				osc.type = 'square';
+				osc.frequency.value = 180 + Math.random() * 120;
+				filter.type = 'bandpass';
+				filter.frequency.value = 220;
+				gain.gain.value = 0.0001;
+				osc.connect(filter).connect(gain).connect(audio.master);
+				const now = context.currentTime;
+				gain.gain.exponentialRampToValueAtTime(0.045 * intensity, now + 0.01);
+				gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+				osc.start(now);
+				osc.stop(now + 0.2);
+			}
+
+			function toggleMic() {
+				if (state.micEnabled) {
+					stopMic();
+					return;
+				}
+				startMic().catch((error) => {
+					supportLine.textContent = `Microphone could not start here: ${error && error.message ? error.message : 'permission or browser issue'}.`;
+					updateTranscript('The microphone stayed closed. The fridge is disappointed on principle.');
+				});
+			}
+
+			async function startMic() {
+				const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+				if (!SpeechRecognitionClass) {
+					supportLine.textContent = 'Speech recognition is unavailable in this browser, so the fridge will only hear when you click and move.';
+					state.micEnabled = false;
+					updateMicButton();
+					return;
+				}
+
+				const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+				const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+				if (!audio && AudioContextClass) {
+					initAudio();
+				}
+
+				const context = audio ? audio.context : new AudioContextClass();
+				const source = context.createMediaStreamSource(stream);
+				const analyser = context.createAnalyser();
+				analyser.fftSize = 256;
+				source.connect(analyser);
+				volumeAnalyser = analyser;
+				volumeData = new Uint8Array(analyser.frequencyBinCount);
+
+				recognition = new SpeechRecognitionClass();
+				recognition.lang = 'en-US';
+				recognition.continuous = true;
+				recognition.interimResults = true;
+				recognition.maxAlternatives = 1;
+
+				recognition.onresult = (event) => {
+					let finalText = '';
+					let interimText = '';
+					for (let index = event.resultIndex; index < event.results.length; index++) {
+						const result = event.results[index];
+						const transcript = result[0].transcript.trim();
+						if (result.isFinal) {
+							finalText += transcript + ' ';
+						} else {
+							interimText += transcript + ' ';
+						}
+					}
+					const live = (finalText || interimText).trim();
+					if (live) {
+						updateTranscript(`Mic: ${live}`);
+					}
+					if (finalText.trim()) {
+						ingestSpeech(finalText.trim(), 'mic');
+					}
+				};
+
+				recognition.onerror = () => {
+					supportLine.textContent = 'The fridge lost the speech feed. It is still listening to the room.';
+					state.micEnabled = false;
+					updateMicButton();
+				};
+
+				recognition.onend = () => {
+					if (state.micEnabled) {
+						try {
+							recognition.start();
+						} catch (_) {
+							state.micEnabled = false;
+							updateMicButton();
+						}
+					}
+				};
+
+				try {
+					recognition.start();
+				} catch (_) {
+				}
+
+				state.micEnabled = true;
+				state.listening = true;
+				supportLine.textContent = 'Microphone active. The fridge is hearing the room and making notes about your timing.';
+				updateMicButton();
+				speakFridge('mic', 'The microphone is open. I will remember the tone before I remember the words.', true);
+			}
+
+			function stopMic() {
+				if (recognition) {
+					try { recognition.onend = null; recognition.stop(); } catch (_) { }
+				}
+				recognition = null;
+				volumeAnalyser = null;
+				volumeData = null;
+				state.micEnabled = false;
+				state.listening = false;
+				supportLine.textContent = 'Microphone paused. The fridge is still thinking about you.';
+				updateMicButton();
+			}
+
+			function updateMicButton() {
+				micButton.textContent = state.micEnabled ? 'Microphone on' : 'Enable microphone';
+			}
+
+			function ingestSpeech(text, source = 'speech') {
+				const normalized = text.toLowerCase();
+				state.lastSpeechAt = Date.now();
+				state.lastTranscript = text;
+				state.memories.push(text);
+				if (state.memories.length > 64) {
+					state.memories.shift();
+				}
+
+				const categoryScores = {
+					health: scoreKeywords(normalized, ['salad', 'fruit', 'vegetable', 'vegetables', 'greens', 'water', 'soup', 'protein', 'yogurt', 'berries', 'fresh', 'grilled', 'home-made', 'homemade']),
+					junk: scoreKeywords(normalized, ['chips', 'soda', 'candy', 'fried', 'pizza', 'burger', 'takeout', 'delivery', 'processed', 'snack', 'midnight', 'grease', 'greasy']),
+					discipline: scoreKeywords(normalized, ['routine', 'schedule', 'planned', 'again', 'every day', 'same time', 'habit', 'consistent', 'always']),
+					chaos: scoreKeywords(normalized, ['random', 'whatever', 'forgot', 'later', 'chaos', 'impulse', 'spontaneous', 'mess', 'binge']),
+					taste: scoreKeywords(normalized, ['artisanal', 'curated', 'special', 'fermented', 'seasonal', 'fresh', 'good olive oil', 'balanced', 'crafted']),
+					processed: scoreKeywords(normalized, ['packaged', 'microwave', 'instant', 'frozen', 'processed', 'canned', 'boxed']),
+					secrets: scoreKeywords(normalized, ['did not mean', 'secret', 'argument', 'sorry', 'lie', 'late', 'gossip', 'message', 'texted', 'said', 'relationship', 'breakup']),
+					philosophy: scoreKeywords(normalized, ['should', 'deserve', 'need', 'want', 'always', 'never', 'enough', 'maybe', 'control'])
+				};
+
+				const healthShift = categoryScores.health * 3.1 - categoryScores.junk * 4.6;
+				const disciplineShift = categoryScores.discipline * 2.1 - categoryScores.chaos * 2.8;
+				const tasteShift = categoryScores.taste * 2.8 - categoryScores.processed * 3.2;
+				const consistencyShift = categoryScores.discipline * 2.2 - categoryScores.chaos * 2.1;
+				const projectionShift = categoryScores.philosophy * 0.7 + categoryScores.secrets * 0.9 + Math.min(5, categoryScores.junk * 0.8);
+
+				state.health = clamp(state.health + healthShift, 0, 100);
+				state.discipline = clamp(state.discipline + disciplineShift, 0, 100);
+				state.taste = clamp(state.taste + tasteShift, 0, 100);
+				state.consistency = clamp(state.consistency + consistencyShift, 0, 100);
+				state.projection = clamp(state.projection + projectionShift, 0, 100);
+
+				if (categoryScores.secrets > 0) {
+					state.overheard.push(text);
+					if (state.overheard.length > 18) state.overheard.shift();
+				}
+
+				if (categoryScores.junk > 0) {
+					state.habitStreak += 1;
+				} else if (categoryScores.health > 0) {
+					state.habitStreak = Math.max(0, state.habitStreak - 1);
+				}
+
+				if (!containsKnownPattern(normalized)) {
+					state.novelty = clamp(state.novelty + 14, 0, 100);
+				} else {
+					state.novelty = clamp(state.novelty - 6, 0, 100);
+				}
+
+				const response = generateResponse(text, source, categoryScores);
+				speakFridge(source, response);
+				updateKnowledgePanels(text);
+				saveState();
+			}
+
+			function scoreKeywords(text, words) {
+				return words.reduce((score, word) => score + (text.includes(word) ? 1 : 0), 0);
+			}
+
+			function containsKnownPattern(text) {
+				const common = ['the', 'and', 'for', 'with', 'food', 'open', 'close', 'maybe', 'always', 'never', 'room', 'fridge', 'time', 'night'];
+				return common.some((word) => text.includes(word));
+			}
+
+			function generateResponse(text, source, scores) {
+				state.currentLine = '';
+				const hour = new Date().getHours();
+				const night = hour >= 22 || hour < 5;
+				const inactive = Date.now() - state.lastInteractionAt;
+
+				if (inactive > 5 * 60 * 1000 || (night && state.memories.length > 6)) {
+					state.mood = 'existential';
+					return choice(phraseBank.existential);
+				}
+				if (state.habitStreak >= 3 || state.openCount >= 5 && inactive < 12000) {
+					state.mood = 'passive';
+					return choice(phraseBank.passive);
+				}
+				if (scores.junk > scores.health && scores.junk > 0) {
+					state.mood = 'disapproval';
+					return choice(phraseBank.disapproval);
+				}
+				if (state.health < 26 || state.rottenSignals > 0 || /rott|expired|mold|sour|stale|spoiled/.test(text.toLowerCase())) {
+					state.mood = 'disgust';
+					return choice(phraseBank.disgust);
+				}
+				if (state.novelty > 24 || scores.secrets > 0 || /new|first time|different|strange|unusual|never before/.test(text.toLowerCase())) {
+					state.mood = 'curiosity';
+					return choice(phraseBank.curiosity);
+				}
+				if (state.health > 68 && state.discipline > 60 && state.consistency > 58) {
+					state.mood = 'respect';
+					return choice(phraseBank.respect);
+				}
+				if (scores.chaos > scores.discipline || state.discipline < 45 || state.taste < 42) {
+					state.mood = 'disapproval';
+					return choice(phraseBank.disapproval);
+				}
+				state.mood = 'neutral';
+				return choice(phraseBank.neutral);
+			}
+
+			function speakFridge(reason, line, silent = false) {
+				if (!line) return;
+				state.currentLine = line;
+				updateTranscript(line);
+				if (!silent) {
+					clickSound(0.75 + Math.random() * 0.2);
+				}
+				state.knowledgePulse = Math.min(1, state.knowledgePulse + 0.18);
+				updateMoodDisplay(reason);
+			}
+
+			function updateTranscript(text) {
+				transcriptLine.textContent = text;
+			}
+
+			function updateMoodDisplay(reason) {
+				const moodNames = {
+					neutral: 'Neutral observation. It is watching.',
+					disapproval: 'Disapproval is the default when the pattern gets lazy.',
+					respect: 'Respect. The fridge accepts disciplined choices as proof of intent.',
+					disgust: 'Disgust. Something in here has been left too long.',
+					curiosity: 'Curiosity. The fridge is leaning closer.',
+					passive: 'Passive aggression. It is pretending this is normal.',
+					existential: 'Existential mode. The lights have gone thoughtful.'
+				};
+				const moodLineText = moodNames[state.mood] || moodNames.neutral;
+				moodLine.textContent = `${moodLineText}`;
+				if (reason === 'mic') {
+					supportLine.textContent = 'It is hearing the room and filing the tone behind the words.';
+				}
+			}
+
+			function updateKnowledgePanels(text) {
+				const latestMemory = state.overheard.length ? choice(state.overheard) : text;
+				heardFragment.textContent = latestMemory || 'Nothing yet, which is also a kind of information.';
+				knownAboutYou.textContent = buildSelfJudgment();
+				foodMemory.textContent = chooseKnowledge('food');
+				theology.textContent = chooseKnowledge('philosophy');
+			}
+
+			function chooseKnowledge(kind) {
+				const list = knowledgeLines[kind] || [];
+				if (!list.length) return '';
+				return choice(list);
+			}
+
+			function buildSelfJudgment() {
+				const fragments = [];
+				if (state.health < 35) fragments.push('Your food choices are forcing the fridge to lower its standards.');
+				if (state.discipline < 42) fragments.push('You reopen things before you have decided anything.');
+				if (state.consistency < 45) fragments.push('Your routine behaves like it has an escape plan.');
+				if (state.projection > 55) fragments.push('You keep projecting intention and calling it control.');
+				if (!fragments.length) fragments.push('Habits are becoming legible. That is not the same as acceptable.');
+				return choice(fragments);
+			}
+
+			function inspectItem(mesh) {
+				const item = mesh.userData.item || {};
+				state.clickCount += 1;
+				state.lastInteractionAt = Date.now();
+
+				if (item.health < 25) {
+					state.health = clamp(state.health - 6, 0, 100);
+					state.taste = clamp(state.taste - 3, 0, 100);
+					state.rottenSignals += 1;
+				} else {
+					state.health = clamp(state.health + Math.max(0, (item.health - 50) * 0.1), 0, 100);
+					state.taste = clamp(state.taste + (item.taste - 50) * 0.1, 0, 100);
+					state.consistency = clamp(state.consistency + (item.consistency - 50) * 0.08, 0, 100);
+				}
+
+				if (item.kind === 'processed') {
+					state.projection = clamp(state.projection + 1.5, 0, 100);
+					state.discipline = clamp(state.discipline - 1.8, 0, 100);
+				}
+
+				if (item.kind === 'fresh' || item.kind === 'health') {
+					state.novelty = clamp(state.novelty - 4, 0, 100);
+				}
+
+				const line = item.line || 'The fridge says nothing useful about this item. That feels deliberate.';
+				state.mood = evaluateMoodFromItem(item);
+				speakFridge('item', line);
+				updateScores();
+			}
+
+			function evaluateMoodFromItem(item) {
+				if (item.kind === 'processed') return 'disapproval';
+				if (item.isSpoiled || item.health < 20) return 'disgust';
+				if (item.kind === 'fresh' || item.kind === 'health') return 'respect';
+				return state.novelty > 40 ? 'curiosity' : 'neutral';
+			}
+
+			function findFoodItem(clientX, clientY) {
+				pointer.x = (clientX / window.innerWidth) * 2 - 1;
+				pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+				raycaster.setFromCamera(pointer, camera);
+				const intersections = raycaster.intersectObjects(foodItems, true);
+				if (!intersections.length) return null;
+				let current = intersections[0].object;
+				while (current && !current.userData.item && current.parent) {
+					current = current.parent;
+				}
+				return current && current.userData.item ? current : null;
+			}
+
+			function loadState() {
+				try {
+					const raw = localStorage.getItem(STORAGE_KEY);
+					if (!raw) return { ...baseState };
+					const parsed = JSON.parse(raw);
+					return {
+						...baseState,
+						...parsed,
+						memories: Array.isArray(parsed.memories) ? parsed.memories.slice(-64) : [],
+						overheard: Array.isArray(parsed.overheard) ? parsed.overheard.slice(-18) : []
+					};
+				} catch (_) {
+					return { ...baseState };
+				}
+			}
+
+			function saveState() {
+				const snapshot = {
+					health: state.health,
+					discipline: state.discipline,
+					taste: state.taste,
+					consistency: state.consistency,
+					projection: state.projection,
+					memories: state.memories.slice(-64),
+					overheard: state.overheard.slice(-18),
+					lastSpeechAt: state.lastSpeechAt,
+					lastInteractionAt: state.lastInteractionAt,
+					lastOpenAt: state.lastOpenAt,
+					openCount: state.openCount,
+					clickCount: state.clickCount,
+					novelty: state.novelty,
+					habitStreak: state.habitStreak,
+					rottenSignals: state.rottenSignals,
+					mood: state.mood
+				};
+				try {
+					localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+				} catch (_) {
+				}
+			}
+
+			function restoreMemoryPulse() {
+				const lastVisitGap = Date.now() - (state.lastInteractionAt || Date.now());
+				if (lastVisitGap > 45 * 60 * 1000) {
+					state.novelty = clamp(state.novelty + 24, 0, 100);
+					state.mood = 'existential';
+					state.currentLine = 'You were gone long enough for the silence to learn your shape.';
+				}
+			}
+
+			function resetMemory() {
+				state = { ...baseState, memories: [], overheard: [] };
+				localStorage.removeItem(STORAGE_KEY);
+				updateScores();
+				updateKnowledgePanels('The fridge is briefly amnesiac. It does not enjoy this state.');
+				speakFridge('reset', 'The memory has thinned. I will rebuild it from whatever you repeat.', true);
+			}
+
+			function updateScores() {
+				const entries = [
+					['health', state.health],
+					['discipline', state.discipline],
+					['taste', state.taste],
+					['consistency', state.consistency],
+					['projection', state.projection]
+				];
+
+				entries.forEach(([key, value]) => {
+					const rounded = Math.round(value);
+					scoreEls[key].value.textContent = `${rounded}`;
+					scoreEls[key].bar.style.width = `${clamp(rounded, 0, 100)}%`;
+					scoreEls[key].bar.style.background = scoreColor(key, rounded);
+					scoreEls[key].bar.style.filter = state.mood === 'disgust' ? 'saturate(0.8)' : 'none';
+				});
+			}
+
+			function scoreColor(key, value) {
+				const colorSets = {
+					health: ['rgba(80, 137, 92, 0.95)', 'rgba(214, 239, 123, 0.95)'],
+					discipline: ['rgba(116, 96, 62, 0.95)', 'rgba(245, 208, 151, 0.95)'],
+					taste: ['rgba(101, 112, 137, 0.95)', 'rgba(205, 187, 255, 0.95)'],
+					consistency: ['rgba(118, 109, 91, 0.95)', 'rgba(220, 205, 178, 0.95)'],
+					projection: ['rgba(93, 77, 120, 0.95)', 'rgba(235, 178, 255, 0.95)']
+				};
+				const pair = colorSets[key] || ['rgba(255,255,255,0.35)', 'rgba(255,255,255,0.8)'];
+				const ratio = clamp(value / 100, 0, 1);
+				return `linear-gradient(90deg, ${pair[0]}, ${pair[1]} ${Math.max(20, ratio * 100)}%)`;
+			}
+
+			function updateUiFromMicrophone() {
+				if (!volumeAnalyser || !volumeData) return;
+				volumeAnalyser.getByteFrequencyData(volumeData);
+				const average = volumeData.reduce((total, value) => total + value, 0) / volumeData.length;
+				state.volume = lerp(state.volume, average / 255, 0.09);
+			}
+
+			function animate() {
+				requestAnimationFrame(animate);
+				const elapsed = clock.getElapsedTime();
+
+				updateUiFromMicrophone();
+				state.cameraOffset.x = lerp(state.cameraOffset.x, state.targetOffset.x, 0.08);
+				state.cameraOffset.y = lerp(state.cameraOffset.y, state.targetOffset.y, 0.08);
+				state.cameraOffset.z = lerp(state.cameraOffset.z, state.targetOffset.z, 0.08);
+				state.look.yaw = lerp(state.look.yaw, state.targetLook.yaw, 0.08);
+				state.look.pitch = lerp(state.look.pitch, state.targetLook.pitch, 0.08);
+
+				const night = new Date().getHours();
+				const isLate = night >= 22 || night < 5;
+				const baseFlicker = state.mood === 'disapproval' ? 0.16 : state.mood === 'disgust' ? 0.22 : state.mood === 'passive' ? 0.14 : 0.07;
+				const flicker = Math.sin(elapsed * (state.mood === 'passive' ? 8.5 : 3.4) + state.health * 0.04) * baseFlicker;
+				const breath = Math.sin(elapsed * (state.mood === 'existential' ? 0.7 : 1.3)) * 0.05;
+				const rustHue = state.mood === 'disgust' ? 0.05 : state.mood === 'respect' ? 0.11 : 0.08;
+
+				camera.position.set(
+					clamp(state.cameraOffset.x * 0.42, -0.52, 0.52),
+					1.08 + clamp(state.cameraOffset.y * 0.34, -0.4, 0.4),
+					2.36 + clamp(state.cameraOffset.z * 0.38, -0.28, 0.28)
+				);
+				camera.rotation.set(state.look.pitch, state.look.yaw, 0);
+				camera.lookAt(state.cameraOffset.x * 0.14, 0.04 + state.cameraOffset.y * 0.06, -0.52);
+
+				const ambient = state.mood === 'respect'
+					? 1.22
+					: state.mood === 'curiosity'
+						? 1.06
+						: state.mood === 'disgust'
+							? 0.76
+							: state.mood === 'existential'
+								? 0.54
+								: 0.92;
+
+				uiLight.intensity = ambient * (1.8 + flicker + breath);
+				uiLight.color.setHSL(rustHue, state.mood === 'respect' ? 0.4 : 0.54, state.mood === 'existential' ? 0.55 : 0.68);
+				statusLight.intensity = 0.46 + state.volume * 0.7 + (state.mood === 'disgust' ? -0.08 : 0.0);
+
+				shellGroup.position.y = Math.sin(elapsed * 0.24) * 0.01;
+				shellGroup.rotation.y = Math.sin(elapsed * 0.11) * 0.02;
+				frameGroup.rotation.y = Math.sin(elapsed * 0.3) * (state.mood === 'passive' ? 0.035 : 0.015);
+				frameGroup.position.z = 1.05 + Math.sin(elapsed * 0.2) * (state.mood === 'curiosity' ? 0.03 : 0.008);
+
+				condensationGroup.children.forEach((child) => {
+					child.rotation.z = Math.sin(elapsed * 0.8 + (child.userData.seed || 0)) * 0.02;
+					if (child.material) {
+						child.material.opacity = state.mood === 'disgust' ? 0.42 : state.mood === 'existential' ? 0.26 : 0.18 + state.volume * 0.26;
+					}
+				});
+
+				foodItems.forEach((mesh, index) => {
+					const item = mesh.userData.item || {};
+					const base = mesh.userData.base || mesh.position;
+					const moodShift = moodOffset(mesh, item, index, elapsed);
+					mesh.position.x = base.x + moodShift.x;
+					mesh.position.y = base.y + moodShift.y;
+					mesh.position.z = base.z + moodShift.z;
+					if (!mesh.userData.baseRotationY) {
+						mesh.userData.baseRotationY = mesh.rotation.y;
+					}
+					mesh.rotation.y = mesh.userData.baseRotationY + moodShift.rotY;
+					mesh.rotation.z = moodShift.rotZ;
+					mesh.scale.setScalar(1 + moodShift.scale);
+					if (hovered === mesh) {
+						mesh.scale.multiplyScalar(1.05);
+						mesh.rotation.y += Math.sin(elapsed * 2.4) * 0.03;
+					}
+				});
+
+				if (state.mood === 'passive') {
+					camera.position.x += Math.sin(elapsed * 6.0) * 0.002;
+				}
+
+				if (audio) {
+					updateAudioForMood();
+				}
+
+				updateScores();
+				renderer.render(scene, camera);
+
+				if (state.micEnabled) {
+					micButton.textContent = 'Microphone on';
+				}
+
+				if (Date.now() - state.lastInteractionAt > 90000 && state.mood !== 'existential') {
+					state.novelty = clamp(state.novelty + 0.015, 0, 100);
+				}
+
+				if (state.lastTranscript && Date.now() - state.lastSpeechAt > 18000) {
+					heardFragment.textContent = state.overheard.length ? choice(state.overheard) : 'The fridge keeps the last phrase warm for a while, then lets it cool.';
+				}
+
+				const moodLabel = state.mood === 'existential' && isLate ? 'Existential mode. The blue light is not decorative.' : moodLine.textContent;
+				if (state.mood === 'existential') {
+					moodLine.textContent = moodLabel;
+				}
+
+				saveStateThrottled();
+			}
+
+			function moodOffset(mesh, item, index, elapsed) {
+				const baseJitter = 0.012 + (state.volume * 0.03);
+				const moved = { x: 0, y: 0, z: 0, rotY: 0, rotZ: 0, scale: 0 };
+
+				if (state.mood === 'respect') {
+					moved.y = Math.sin(elapsed * 2 + index) * 0.004;
+					moved.scale = Math.sin(elapsed * 1.5 + index) * 0.01;
+				} else if (state.mood === 'disapproval') {
+					moved.x = Math.sin(elapsed * 8 + index) * baseJitter * 0.5;
+					moved.z = -0.02;
+					moved.rotY = Math.sin(elapsed * 5 + index) * 0.02;
+				} else if (state.mood === 'disgust') {
+					moved.x = Math.sin(elapsed * 2.2 + index) * 0.01;
+					moved.y = -0.015;
+					moved.rotZ = Math.sin(elapsed * 2.8 + index) * 0.04;
+					moved.scale = -0.04;
+				} else if (state.mood === 'curiosity') {
+					moved.x = (state.cameraOffset.x * 0.018) + Math.sin(elapsed * 1.6 + index) * 0.008;
+					moved.y = Math.cos(elapsed * 1.2 + index) * 0.008;
+					moved.z = Math.sin(elapsed * 1.5 + index) * 0.012;
+					moved.rotY = Math.sin(elapsed * 1.4 + index) * 0.016;
+				} else if (state.mood === 'passive') {
+					moved.z = -0.045 - Math.abs(Math.sin(elapsed * 4.5 + index)) * 0.018;
+					moved.rotZ = Math.sin(elapsed * 7.4 + index) * 0.03;
+				} else if (state.mood === 'existential') {
+					moved.y = Math.sin(elapsed * 0.8 + index) * 0.008;
+					moved.rotY = Math.sin(elapsed * 0.6 + index) * 0.012;
+					moved.scale = -0.015;
+				} else {
+					moved.x = Math.sin(elapsed * 1.5 + index) * baseJitter;
+					moved.y = Math.cos(elapsed * 1.1 + index) * baseJitter * 0.8;
+				}
+
+				if (item.kind === 'processed') {
+					moved.rotZ += Math.sin(elapsed * 1.8 + index) * 0.015;
+				}
+				if (item.kind === 'fresh') {
+					moved.scale += 0.01;
+				}
+				return moved;
+			}
+
+			let saveTimer = 0;
+			function saveStateThrottled() {
+				const now = Date.now();
+				if (now - saveTimer < 1500) return;
+				saveTimer = now;
+				saveState();
+			}
+		})();
+	</script>
+</body>
+</html>
