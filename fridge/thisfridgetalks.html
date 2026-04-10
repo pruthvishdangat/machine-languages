@@ -426,6 +426,19 @@
 				</div>
 				<div class="caption" id="support-line">The microphone is optional in this build, but the fridge prefers to listen.</div>
 			</div>
+
+			<div class="card">
+				<label for="text-input" style="display: block; margin-bottom: 8px; font-size: 0.9em; opacity: 0.9;">Or type what you're thinking:</label>
+				<form id="text-form" style="display: flex; gap: 8px;">
+					<input 
+						type="text" 
+						id="text-input" 
+						placeholder="Tell the fridge what you're putting in it..." 
+						style="flex: 1; padding: 10px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); color: var(--cream); font-family: inherit; border-radius: 4px; font-size: 0.95em;"
+					/>
+					<button type="submit" id="text-submit" style="padding: 10px 16px; background: rgba(255, 200, 100, 0.15); border: 1px solid rgba(255, 200, 100, 0.4); color: var(--cream); cursor: pointer; border-radius: 4px; font-family: inherit; white-space: nowrap; transition: all 0.2s;">Send</button>
+				</form>
+			</div>
 		</section>
 
 		<div class="transcript"><span class="line" id="transcript-line">The fridge is waiting for the first thing you say.</span></div>
@@ -435,6 +448,7 @@
 	<script src="https://cdn.jsdelivr.net/npm/three@0.163.0/examples/js/loaders/OBJLoader.js"></script>
 	<script>
 		(function () {
+			console.log('🔧 Initializing Public Fridge...');
 			const STORAGE_KEY = 'public-fridge-memory-v1';
 			const canvas = document.getElementById('fridge-canvas');
 			const transcriptLine = document.getElementById('transcript-line');
@@ -456,6 +470,9 @@
 			const startButton = document.getElementById('start-button');
 			const micButton = document.getElementById('mic-button');
 			const resetButton = document.getElementById('reset-button');
+			const textForm = document.getElementById('text-form');
+			const textInput = document.getElementById('text-input');
+			const textSubmit = document.getElementById('text-submit');
 
 			const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 			const lerp = (a, b, t) => a + (b - a) * t;
@@ -592,6 +609,7 @@
 			init();
 
 			function init() {
+				console.log('🎬 Starting init()...');
 				scene = new THREE.Scene();
 				scene.fog = new THREE.FogExp2(0x030303, 0.18);
 
@@ -630,11 +648,11 @@
 				buildInterior();
 				buildCondensation();
 				buildItems();
-				loadModel();
 				bindEvents();
 				restoreMemoryPulse();
 				updateKnowledgePanels('The fridge is waiting for the first thing you say.');
 				updateScores();
+				console.log('✓ init() complete. Starting animation loop.');
 				animate();
 			}
 
@@ -926,70 +944,10 @@
 				return canvas;
 			}
 
-			function loadModel() {
-				const loader = new THREE.OBJLoader();
-				const paths = ['../FRIDGE.obj', 'FRIDGE.obj', '/FRIDGE.obj'];
-				let attemptCount = 0;
-				let lastError = null;
-				
-				function tryLoadPath(pathIndex) {
-					if (pathIndex >= paths.length) {
-						console.error('All paths failed. Last error:', lastError);
-						supportLine.textContent = 'FRIDGE.obj not found. Showing procedural interior only.';
-						return;
-					}
-					
-					const path = paths[pathIndex];
-					console.log(`[${pathIndex + 1}/${paths.length}] Attempting to load model from: ${path}`);
-					
-					loader.load(
-						path,
-						(object) => {
-							console.log('✓ Model loaded successfully from:', path);
-							object.traverse((child) => {
-								if (child.isMesh) {
-									child.material = new THREE.MeshStandardMaterial({
-										color: 0xc9b8a8,
-										roughness: 0.88,
-										metalness: 0.12,
-										side: THREE.DoubleSide,
-										castShadow: true,
-										receiveShadow: true
-									});
-									child.castShadow = false;
-									child.receiveShadow = true;
-								}
-							});
 
-							const box = new THREE.Box3().setFromObject(object);
-							const size = new THREE.Vector3();
-							const center = new THREE.Vector3();
-							box.getSize(size);
-							box.getCenter(center);
-
-							object.position.sub(center);
-							const scale = 3.8 / Math.max(size.x, size.y, size.z);
-							object.scale.setScalar(scale);
-							object.rotation.y = Math.PI * 0.96;
-							object.position.z = 0.2;
-							object.position.y = 0.1;
-							object.visible = true;
-							shellGroup.add(object);
-							supportLine.textContent = '✓ FRIDGE.obj loaded. The shell is old enough to look earned.';
-						},
-						() => {},
-						(error) => {
-							lastError = error;
-							console.warn(`✗ Failed to load from ${path}:`, error.message || error);
-							tryLoadPath(pathIndex + 1);
-						}
-					);
-				}
-				
-				tryLoadPath(0);
-			}
 
 			function bindEvents() {
+				console.log('Setting up event listeners...');
 				window.addEventListener('resize', onResize);
 				window.addEventListener('mousemove', onPointerMove);
 				window.addEventListener('pointerdown', onPointerDown);
@@ -998,6 +956,8 @@
 				startButton.addEventListener('click', startExperience);
 				micButton.addEventListener('click', toggleMic);
 				resetButton.addEventListener('click', resetMemory);
+				textForm.addEventListener('submit', onTextSubmit);
+				console.log('✓ Event listeners set up. Try moving your mouse over the fridge.');
 				document.addEventListener('visibilitychange', () => {
 					if (document.hidden) saveState();
 				});
@@ -1023,7 +983,8 @@
 				const hit = findFoodItem(event.clientX, event.clientY);
 				hovered = hit;
 				if (hit && hit.userData.item) {
-					supportLine.textContent = `Hovering ${hit.userData.item.name}. The fridge is already forming an opinion.`;
+					supportLine.textContent = `👃 Hovering ${hit.userData.item.name}. The fridge is already forming an opinion.`;
+					console.log(`[HOVER] ${hit.userData.item.name} - yaw: ${state.targetLook.yaw.toFixed(2)}, pitch: ${state.targetLook.pitch.toFixed(2)}`);
 				} else if (!state.micEnabled) {
 					supportLine.textContent = 'The fridge keeps watching from inside the cold.';
 				}
@@ -1037,6 +998,7 @@
 				state.lastOpenAt = now;
 				state.lastInteractionAt = now;
 				const hit = findFoodItem(event.clientX, event.clientY);
+				console.log(`[CLICK] at (${event.clientX.toFixed(0)}, ${event.clientY.toFixed(0)}) - Hit: ${hit ? hit.userData.item?.name : 'none'}`);
 				if (hit) {
 					inspectItem(hit);
 				} else {
@@ -1045,6 +1007,7 @@
 					speakFridge('open', 'You opened the door without changing the reason.');
 				}
 				if (audio) {
+					console.log('[AUDIO] Playing click sound');
 					clickSound(0.9 + Math.random() * 0.5);
 				}
 			}
@@ -1564,6 +1527,16 @@
 				setTimeout(() => { resetButton.textContent = 'Forget some of this'; }, 2000);
 			}
 
+			function onTextSubmit(event) {
+				event.preventDefault();
+				const text = textInput.value.trim();
+				if (!text) return;
+				console.log('[TEXT] User typed:', text);
+				ingestSpeech(text, 'typed');
+				textInput.value = '';
+				textInput.focus();
+			}
+
 			function updateScores() {
 				const entries = [
 					['health', state.health],
@@ -1605,6 +1578,11 @@
 			function animate() {
 				requestAnimationFrame(animate);
 				const elapsed = clock.getElapsedTime();
+				
+				// Log animation heartbeat every 3 seconds
+				if (Math.floor(elapsed) % 3 === 0 && elapsed % 3 < 0.016) {
+					console.log(`[ANIMATE] elapsed: ${elapsed.toFixed(1)}s, mood: ${state.mood}, scores: h${Math.round(state.health)} d${Math.round(state.discipline)} t${Math.round(state.taste)} c${Math.round(state.consistency)} p${Math.round(state.projection)}`);
+				}
 
 				updateUiFromMicrophone();
 				state.cameraOffset.x = lerp(state.cameraOffset.x, state.targetOffset.x, 0.08);
