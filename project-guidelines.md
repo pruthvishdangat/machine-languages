@@ -6,10 +6,10 @@ Create a website that is a speculative interface for a fridge that pays attentio
 
 ## Specifications
 
-- when the page loads a 3d model of a fridge floats in a black void. use FRIDGE.obj
-- the fridge listens to speech in the environment through the user's microphone
-- the fridge has a personality (memory?) that changes as it hears more speech
-- [how does the fridge talk to us? how does it use/interpret the memory that it stores, or the speech that it hears?]
+- when the page loads a 3d model of a fridge floats in a black void. use FRIDGE.obj or fridge generation
+- the fridge listens to speech in the environment through the user's microphone or when the user types to the interface
+- the fridge has a personality (memory) that changes as it hears more speech
+- the fridge talks to us through a series of physical reactions or by talking to us
 - 
 Each user interaction updates internal values:
 health_score (what you eat)
@@ -18,9 +18,10 @@ taste_score (processed vs curated food)
 consistency_score (routine vs chaos)
 moral_projection (fridge projecting personality onto you)
 These scores drive behavior.
+- the fridge needs to process every single thing the user says to it, interpret this judgement based on its own personality, and then change the score of everything everytime
 2. INTERACTION + REACTION SYSTEM
-The fridge does NOT talk normally.
-It communicates through:
+atleast one of the following reaction needs to be made by the fridge to ANYTHING the user says
+The fridge communicates through:
 Light flickers
 Compressor hum changes
 Shelf vibrations
@@ -34,6 +35,7 @@ Slight light buzz
 Nothing moves
 It is watching
 2. Disapproval
+this can be the following but does not need to be only this, the fridge should be able to interpret and form opinions on different choices a usser makes
 Triggered by:
 Junk food
 Late night opening
@@ -46,6 +48,7 @@ Condensation increases (like “breathing”)
 Text tone (if used):
 “Predictable.”
 3. Respect
+this can be the following but does not need to be only this, the fridge should be able to interpret and form opinions on different choices a usser makes
 Triggered by:
 Fresh food
 Structured habits
@@ -57,6 +60,7 @@ Subtle satisfying hum
 Text:
 “You’ve been consistent.”
 4. Disgust
+this can be the following but does not need to be only this, the fridge should be able to interpret and form opinions on different choices a usser makes
 Triggered by:
 Rotten food
 Overfilled fridge
@@ -69,6 +73,7 @@ Items slightly “reject” position (tilt away)
 Text:
 “You let things decay longer than necessary.”
 5. Curiosity
+this can be the following but does not need to be only this, the fridge should be able to interpret and form opinions on different choices a usser makes
 Triggered by:
 New items
 Unusual behavior
@@ -79,7 +84,8 @@ Subtle zoom-in effect
 Soft clicking sounds
 Text:
 “This is new.”
-6. Passive Aggression (CORE MODE)
+6. Passive Aggression (usual mode of the fridge)
+this can be the following but does not need to be only this, the fridge should be able to interpret and form opinions on different choices a usser makes
 Triggered by:
 Repeated bad habits
 Reactions:
@@ -89,6 +95,7 @@ Light flickers rhythmically (almost intentional)
 Text:
 “We’ve done this before.”
 7. Existential Mode (RARE)
+this can be the following but does not need to be only this, the fridge should be able to interpret and form opinions on different choices a usser makes
 Triggered by:
 Long inactivity
 Night usage patterns
@@ -102,10 +109,12 @@ Text:
 B. KNOWLEDGE SYSTEM (WHAT THE FRIDGE “KNOWS”)
 Because it’s public:
 1. Food Knowledge
+extremely well versed in all kinds of knowledge, food related and otherwise
 Nutrition
 Expiration patterns
 Cultural food associations
 2. Behavioral Knowledge
+moody, judgy, dramatic
 Eating habits
 Addiction patterns
 Routine psychology
@@ -117,7 +126,7 @@ Secrets (vague, never specific)
 Example outputs:
 “Someone else said the same thing yesterday. They didn’t mean it either.”
 4. Philosophical Layer
-References ideas similar to:
+References ideas similar to and more:
 habit loops
 self-control
 desire vs need
