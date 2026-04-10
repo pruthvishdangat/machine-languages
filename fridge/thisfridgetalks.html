@@ -221,6 +221,16 @@
 
 		.controls .card {
 			margin-top: 10px;
+			pointer-events: auto;
+		}
+
+		.controls input,
+		.controls button {
+			pointer-events: auto !important;
+		}
+
+		.controls form {
+			pointer-events: auto;
 		}
 
 		.controls p {
@@ -648,6 +658,7 @@
 				buildInterior();
 				buildCondensation();
 				buildItems();
+				loadModel();
 				bindEvents();
 				restoreMemoryPulse();
 				updateKnowledgePanels('The fridge is waiting for the first thing you say.');
@@ -944,6 +955,48 @@
 				return canvas;
 			}
 
+			function loadModel() {
+				const loader = new THREE.OBJLoader();
+				const path = 'fridge';
+				console.log('[MODEL] Loading fridge model from:', path);
+				
+				loader.load(
+					path,
+					(object) => {
+						console.log('✓ Fridge model loaded successfully from:', path);
+						object.traverse((child) => {
+							if (child.isMesh) {
+								child.material = new THREE.MeshStandardMaterial({
+									color: 0xd4a574,
+									roughness: 0.7,
+									metalness: 0.15,
+									side: THREE.DoubleSide
+								});
+							}
+						});
+
+						const box = new THREE.Box3().setFromObject(object);
+						const size = new THREE.Vector3();
+						const center = new THREE.Vector3();
+						box.getSize(size);
+						box.getCenter(center);
+
+						object.position.sub(center);
+						const scale = 3.5 / Math.max(size.x, size.y, size.z);
+						object.scale.setScalar(scale);
+						object.position.z = -0.1;
+						object.position.y = -0.2;
+						object.visible = true;
+						shellGroup.add(object);
+						supportLine.textContent = '✓ The fridge model has arrived.';
+					},
+					() => {},
+					(error) => {
+						console.error('[MODEL] Failed to load fridge:', error);
+						supportLine.textContent = 'Fridge model could not load, but the interior remains.';
+					}
+				);
+			}
 
 
 			function bindEvents() {
