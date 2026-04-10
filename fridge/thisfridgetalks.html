@@ -652,32 +652,34 @@
 
 				const shell = new THREE.Group();
 
-				const backWall = new THREE.Mesh(new THREE.PlaneGeometry(insideWidth, insideHeight, 1, 1), wallMaterial);
+				const transparentWallMaterial = new THREE.MeshStandardMaterial({ color: 0xb8ab8d, roughness: 1, metalness: 0.02, transparent: true, opacity: 0.15, side: THREE.BackSide });
+				
+				const backWall = new THREE.Mesh(new THREE.PlaneGeometry(insideWidth, insideHeight, 1, 1), transparentWallMaterial);
 				backWall.position.set(0, 0, backZ);
 				shell.add(backWall);
 
 				const sideWallGeo = new THREE.PlaneGeometry(insideDepth, insideHeight, 1, 1);
-				const leftWall = new THREE.Mesh(sideWallGeo, wallMaterial);
+				const leftWall = new THREE.Mesh(sideWallGeo, transparentWallMaterial);
 				leftWall.rotation.y = Math.PI / 2;
 				leftWall.position.set(-insideWidth * 0.5, 0, 0);
 				shell.add(leftWall);
 
-				const rightWall = new THREE.Mesh(sideWallGeo, wallMaterial);
+				const rightWall = new THREE.Mesh(sideWallGeo, transparentWallMaterial);
 				rightWall.rotation.y = -Math.PI / 2;
 				rightWall.position.set(insideWidth * 0.5, 0, 0);
 				shell.add(rightWall);
 
-				const topWall = new THREE.Mesh(new THREE.PlaneGeometry(insideWidth, insideDepth), wallMaterial);
+				const topWall = new THREE.Mesh(new THREE.PlaneGeometry(insideWidth, insideDepth), transparentWallMaterial);
 				topWall.rotation.x = Math.PI / 2;
 				topWall.position.set(0, insideHeight * 0.5, 0);
 				shell.add(topWall);
 
-				const bottomWall = new THREE.Mesh(new THREE.PlaneGeometry(insideWidth, insideDepth), wallMaterial);
+				const bottomWall = new THREE.Mesh(new THREE.PlaneGeometry(insideWidth, insideDepth), transparentWallMaterial);
 				bottomWall.rotation.x = -Math.PI / 2;
 				bottomWall.position.set(0, -insideHeight * 0.5, 0);
 				shell.add(bottomWall);
 
-				const floor = new THREE.Mesh(new THREE.PlaneGeometry(insideWidth, insideDepth), wallMaterial);
+				const floor = new THREE.Mesh(new THREE.PlaneGeometry(insideWidth, insideDepth), transparentWallMaterial);
 				floor.rotation.x = -Math.PI / 2;
 				floor.position.set(0, -insideHeight * 0.5 + 0.02, 0);
 				shell.add(floor);
@@ -926,45 +928,65 @@
 
 			function loadModel() {
 				const loader = new THREE.OBJLoader();
-				loader.load(
-					'../FRIDGE.obj',
-					(object) => {
-						object.traverse((child) => {
-							if (child.isMesh) {
-								child.material = new THREE.MeshStandardMaterial({
-									color: 0xb9b1a5,
-									roughness: 0.92,
-									metalness: 0.08,
-									side: THREE.DoubleSide,
-									transparent: true,
-									opacity: 0.9
-								});
-								child.castShadow = false;
-								child.receiveShadow = true;
-							}
-						});
-
-						const box = new THREE.Box3().setFromObject(object);
-						const size = new THREE.Vector3();
-						const center = new THREE.Vector3();
-						box.getSize(size);
-						box.getCenter(center);
-
-						object.position.sub(center);
-						const scale = 3.6 / Math.max(size.x, size.y, size.z);
-						object.scale.setScalar(scale);
-						object.rotation.y = Math.PI * 0.96;
-						object.position.z = -0.1;
-						object.position.y = -0.08;
-						object.renderOrder = -2;
-						shellGroup.add(object);
-						supportLine.textContent = 'FRIDGE.obj is loaded. The shell is old enough to look earned.';
-					},
-					undefined,
-					() => {
-						supportLine.textContent = 'FRIDGE.obj could not be loaded here, so the fridge is wearing a procedural shell until the model becomes available.';
+				const paths = ['../FRIDGE.obj', 'FRIDGE.obj', '/FRIDGE.obj'];
+				let attemptCount = 0;
+				let lastError = null;
+				
+				function tryLoadPath(pathIndex) {
+					if (pathIndex >= paths.length) {
+						console.error('All paths failed. Last error:', lastError);
+						supportLine.textContent = 'FRIDGE.obj not found. Showing procedural interior only.';
+						return;
 					}
-				);
+					
+					const path = paths[pathIndex];
+					console.log(`[${pathIndex + 1}/${paths.length}] Attempting to load model from: ${path}`);
+					
+					loader.load(
+						path,
+						(object) => {
+							console.log('✓ Model loaded successfully from:', path);
+							object.traverse((child) => {
+								if (child.isMesh) {
+									child.material = new THREE.MeshStandardMaterial({
+										color: 0xc9b8a8,
+										roughness: 0.88,
+										metalness: 0.12,
+										side: THREE.DoubleSide,
+										castShadow: true,
+										receiveShadow: true
+									});
+									child.castShadow = false;
+									child.receiveShadow = true;
+								}
+							});
+
+							const box = new THREE.Box3().setFromObject(object);
+							const size = new THREE.Vector3();
+							const center = new THREE.Vector3();
+							box.getSize(size);
+							box.getCenter(center);
+
+							object.position.sub(center);
+							const scale = 3.8 / Math.max(size.x, size.y, size.z);
+							object.scale.setScalar(scale);
+							object.rotation.y = Math.PI * 0.96;
+							object.position.z = 0.2;
+							object.position.y = 0.1;
+							object.visible = true;
+							shellGroup.add(object);
+							supportLine.textContent = '✓ FRIDGE.obj loaded. The shell is old enough to look earned.';
+						},
+						() => {},
+						(error) => {
+							lastError = error;
+							console.warn(`✗ Failed to load from ${path}:`, error.message || error);
+							tryLoadPath(pathIndex + 1);
+						}
+					);
+				}
+				
+				tryLoadPath(0);
 			}
 
 			function bindEvents() {
@@ -1047,17 +1069,22 @@
 			}
 
 			function startExperience() {
-				startButton.textContent = 'Door open';
+				console.log('Start button clicked - initializing experience');
+				if (!audio) {
+					initAudio();
+				}
+				startButton.textContent = '✓ Door open';
 				startButton.disabled = true;
-				startButton.style.opacity = '0.75';
-				initAudio();
+				startButton.style.opacity = '0.6';
 				updateTranscript('The door opens. The fridge does not trust first impressions.');
 				speakFridge('start', 'The door opens. The fridge does not trust first impressions.');
+				supportLine.textContent = 'The fridge is listening. Press space to peek deeper, or open the microphone.';
 				state.lastInteractionAt = Date.now();
 			}
 
 			function initAudio() {
 				if (audio) {
+					console.log('Audio already initialized');
 					return;
 				}
 				const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -1067,7 +1094,7 @@
 				}
 				const context = new AudioContextClass();
 				const master = context.createGain();
-				master.gain.value = 0.0;
+				master.gain.value = 0.68;
 				master.connect(context.destination);
 
 				const low = context.createOscillator();
@@ -1157,11 +1184,15 @@
 			}
 
 			function toggleMic() {
+				console.log('Mic button clicked - current state:', state.micEnabled);
 				if (state.micEnabled) {
 					stopMic();
+					micButton.textContent = 'Enable microphone';
+					supportLine.textContent = 'Microphone paused. The fridge is still thinking about you.';
 					return;
 				}
 				startMic().catch((error) => {
+					console.error('Mic error:', error);
 					supportLine.textContent = `Microphone could not start here: ${error && error.message ? error.message : 'permission or browser issue'}.`;
 					updateTranscript('The microphone stayed closed. The fridge is disappointed on principle.');
 				});
@@ -1522,11 +1553,15 @@
 			}
 
 			function resetMemory() {
-				state = { ...baseState, memories: [], overheard: [] };
+				console.log('Reset button clicked - clearing memory');
+				state = { ...baseState, memories: [], overheard: [], lastInteractionAt: Date.now() };
 				localStorage.removeItem(STORAGE_KEY);
 				updateScores();
 				updateKnowledgePanels('The fridge is briefly amnesiac. It does not enjoy this state.');
+				updateTranscript('The fridge has forgotten. Start over.');
 				speakFridge('reset', 'The memory has thinned. I will rebuild it from whatever you repeat.', true);
+				resetButton.textContent = '✓ Memory cleared';
+				setTimeout(() => { resetButton.textContent = 'Forget some of this'; }, 2000);
 			}
 
 			function updateScores() {
