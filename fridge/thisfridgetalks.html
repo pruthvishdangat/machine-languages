@@ -680,6 +680,7 @@
 			};
 
 			function init() {
+				scene = new THREE.Scene();
 				scene.fog = new THREE.FogExp2(0x030303, 0.18);
 
 				camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.01, 50);
@@ -1435,6 +1436,12 @@
 		const response = generateResponse(text, source, categoryScores);
 		speakFridge(source, response);
 		updateKnowledgePanels(text);
+		
+		// Get an AI-powered response for deeper, more contextual reactions
+		getFridgeAIResponse(text, source === 'typed' ? 'text' : 'speech').catch(err => {
+			console.log('AI response skipped, using default:', err.message);
+		});
+		
 		saveState();
 	}
 			function scoreKeywords(text, words) {
@@ -1543,6 +1550,56 @@
 				}
 			}
 
+			async function getFridgeAIResponse(userInput, interactionType = 'text', foodItem = null) {
+				try {
+					const response = await fetch('http://localhost:3001/api/fridge-response', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							userInput,
+							state,
+							foodItem,
+							interactionType
+						})
+					});
+
+					if (!response.ok) {
+						console.error('API Error:', response.statusText);
+						return null;
+					}
+
+					const data = await response.json();
+					
+					if (data.response) {
+						// Apply mood shift from AI analysis
+						if (data.moodShift) {
+							state.health = clamp(state.health + (data.moodShift.health || 0), 0, 100);
+							state.discipline = clamp(state.discipline + (data.moodShift.discipline || 0), 0, 100);
+							state.taste = clamp(state.taste + (data.moodShift.taste || 0), 0, 100);
+							state.consistency = clamp(state.consistency + (data.moodShift.consistency || 0), 0, 100);
+							state.projection = clamp(state.projection + (data.moodShift.projection || 0), 0, 100);
+							
+							if (data.moodShift.mood) {
+								state.mood = data.moodShift.mood;
+							}
+						}
+
+						// Display the response
+						speakFridge('ai', data.response);
+						state.memories.push(data.response);
+						if (state.memories.length > 64) state.memories.shift();
+						
+						return data.response;
+					}
+				} catch (error) {
+					console.error('Fridge API Error:', error);
+					// Fallback to default response
+					const fallback = 'The fridge hums, processing the silence.';
+					speakFridge('error', fallback);
+					return fallback;
+				}
+			}
+
 			function updateKnowledgePanels(text) {
 				const latestMemory = state.overheard.length ? choice(state.overheard) : text;
 				heardFragment.textContent = latestMemory || 'Nothing yet, which is also a kind of information.';
@@ -1630,6 +1687,11 @@
 				state.mood = evaluateMoodFromItem(item);
 				speakFridge('item', line);
 				updateScores();
+				
+				// Get AI commentary on the food choice
+				getFridgeAIResponse(`The person chose ${item.name}`, 'food_click', item.name).catch(err => {
+					console.log('AI response for item skipped:', err.message);
+				});
 			}
 
 			function evaluateMoodFromItem(item) {
