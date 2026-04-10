@@ -129,3 +129,4 @@ But never directly cites anything—just echoes tone.
 ## Instructions
 
 - Only create files inside of the "fridge" folder.
+- make sure that everything created with these guidleines is separate from what i have already created and all of this is only saved in the folder named "fridge"
